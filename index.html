@@ -1,0 +1,676 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Shelter 20ft — Modello 3D</title>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+body { background:#fff; font-family:'Segoe UI',Arial,sans-serif; overflow:hidden; }
+#c { display:block; width:100vw; height:100vh; }
+
+#title-bar {
+  position:fixed; top:14px; left:14px;
+  background:rgba(255,255,255,.97); border:1px solid #ddd;
+  border-radius:10px; padding:10px 18px;
+  box-shadow:0 2px 10px rgba(0,0,0,.12); pointer-events:none;
+}
+#title-bar h2 { font-size:16px; color:#1a3a6b; font-weight:700; }
+#title-bar p  { font-size:11px; color:#777; margin-top:2px; }
+#title-bar a  { font-size:11px; color:#2278EE; text-decoration:none; pointer-events:all; }
+
+/* ── layer toggles (top-center) ── */
+#layers {
+  position:fixed; top:14px; left:50%; transform:translateX(-50%);
+  background:rgba(255,255,255,.97); border:1px solid #ddd;
+  border-radius:10px; padding:8px 12px;
+  box-shadow:0 2px 10px rgba(0,0,0,.10);
+  display:flex; gap:5px; flex-wrap:wrap; justify-content:center;
+}
+#layers button {
+  padding:5px 12px; border:2px solid #ccc; border-radius:18px;
+  background:#fff; cursor:pointer; font-size:12px; font-weight:600;
+  transition:all .15s; white-space:nowrap; color:#444;
+}
+#layers button.on { color:#fff; }
+#layers button[data-l="struttura"].on  { background:#B8A888; border-color:#B8A888; }
+#layers button[data-l="tetto"].on      { background:#7A8896; border-color:#7A8896; }
+#layers button[data-l="scala"].on      { background:#4A6080; border-color:#4A6080; }
+#layers button[data-l="balaustra"].on  { background:#556677; border-color:#556677; }
+#layers button[data-l="accessori"].on  { background:#5588AA; border-color:#5588AA; }
+#layers button[data-l="bbq"].on        { background:#884422; border-color:#884422; }
+
+/* ── info panel ── */
+#info-panel {
+  position:fixed; top:14px; right:14px;
+  background:rgba(255,255,255,.97); border:1px solid #ccc;
+  border-radius:10px; padding:14px 18px; width:295px;
+  box-shadow:0 4px 16px rgba(0,0,0,.14); font-size:13px;
+  transition:opacity .2s;
+}
+#info-panel.hidden { opacity:0; pointer-events:none; }
+#info-panel h3 { color:#1a3a6b; font-size:14px; margin-bottom:8px;
+  border-bottom:2px solid #e0e8f5; padding-bottom:5px; }
+#info-panel .dim {
+  background:#f4f6fa; border-radius:6px; padding:9px 11px;
+  font-family:Consolas,monospace; font-size:12px; line-height:1.8;
+  white-space:pre-wrap; color:#333; }
+#info-panel .close-btn {
+  position:absolute; top:9px; right:13px;
+  background:none; border:none; cursor:pointer; font-size:18px; color:#aaa; }
+
+/* ── view buttons ── */
+#controls {
+  position:fixed; bottom:18px; left:50%; transform:translateX(-50%);
+  display:flex; gap:5px; background:rgba(255,255,255,.97);
+  border:1px solid #ddd; border-radius:10px; padding:8px 12px;
+  box-shadow:0 2px 10px rgba(0,0,0,.10);
+}
+#controls button {
+  padding:6px 13px; border:1px solid #ccc; border-radius:6px;
+  background:#fff; cursor:pointer; font-size:12px; color:#333;
+  transition:all .15s;
+}
+#controls button:hover { background:#eef2fa; }
+#controls button.active { background:#1a3a6b; color:#fff; border-color:#1a3a6b; }
+
+/* ── legend ── */
+#legend {
+  position:fixed; bottom:68px; left:14px;
+  background:rgba(255,255,255,.97); border:1px solid #ddd;
+  border-radius:10px; padding:10px 14px;
+  box-shadow:0 2px 10px rgba(0,0,0,.10);
+  font-size:11.5px; line-height:2.0;
+}
+.dot { display:inline-block; width:11px; height:11px;
+  border-radius:2px; margin-right:6px; vertical-align:middle; }
+
+#hint {
+  position:fixed; bottom:66px; right:14px;
+  background:rgba(0,0,0,.45); color:#fff;
+  padding:5px 13px; border-radius:20px; font-size:11px;
+  pointer-events:none; transition:opacity 1.5s;
+}
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+
+<div id="title-bar">
+  <h2>Shelter 20ft</h2>
+  <p>6000 × 2500 × 2591 mm &nbsp;·&nbsp; RAL 1019 Grigio-Beige</p>
+  <a href="impianti.html">Apri impianti idrico &amp; elettrico →</a>
+</div>
+
+<!-- Layer toggles -->
+<div id="layers">
+  <button data-l="struttura" class="on" onclick="tgl(this)">Struttura</button>
+  <button data-l="tetto"     class="on" onclick="tgl(this)">Tetto + Balaustra</button>
+  <button data-l="scala"     class="on" onclick="tgl(this)">Scala</button>
+  <button data-l="accessori" class="on" onclick="tgl(this)">Sensori / Lampade</button>
+  <button data-l="bbq"       class="on" onclick="tgl(this)">Area BBQ</button>
+</div>
+
+<div id="info-panel" class="hidden">
+  <button class="close-btn" onclick="closePanel()">×</button>
+  <h3 id="pname">—</h3>
+  <div class="dim" id="pdims"></div>
+</div>
+
+<div id="controls">
+  <button onclick="sv('iso')"   id="b-iso"   class="active">Vista 3D</button>
+  <button onclick="sv('front')" id="b-front">Frontale</button>
+  <button onclick="sv('rear')"  id="b-rear">Posteriore</button>
+  <button onclick="sv('side')"  id="b-side">Laterale</button>
+  <button onclick="sv('stair')" id="b-stair">Vista Scala</button>
+  <button onclick="sv('top')"   id="b-top">Pianta</button>
+  <button onclick="twire()"     id="b-wire">Wireframe</button>
+</div>
+
+<div id="legend">
+  <div><span class="dot" style="background:#B8A888"></span>Struttura RAL 1019</div>
+  <div><span class="dot" style="background:#7A8FAA"></span>Porta scorrevole</div>
+  <div><span class="dot" style="background:#606468"></span>Acciaio / Longheroni</div>
+  <div><span class="dot" style="background:#F0F060"></span>Lampade LED IP65</div>
+  <div><span class="dot" style="background:#FF4422"></span>Dräger Polytron 5200 CH4</div>
+</div>
+
+<div id="hint">Clicca un elemento per le dimensioni · Trascina per ruotare</div>
+
+<script src="js/three.min.js"></script>
+<script src="js/OrbitControls.js"></script>
+<script>
+'use strict';
+
+/* ============================================================
+   RENDERER / SCENE / CAMERA
+   ============================================================ */
+const canvas = document.getElementById('c');
+const renderer = new THREE.WebGLRenderer({ canvas, antialias:true });
+renderer.setPixelRatio(Math.min(window.devicePixelRatio,2));
+renderer.setSize(window.innerWidth, window.innerHeight);
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+renderer.setClearColor(0xFFFFFF,1);
+
+const scene  = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(42, window.innerWidth/window.innerHeight, 0.05, 200);
+camera.position.set(11, 9, 13);
+
+const orb = new THREE.OrbitControls(camera, renderer.domElement);
+orb.target.set(0, 1.3, 0);
+orb.enableDamping = true; orb.dampingFactor = 0.07;
+orb.minDistance = 1; orb.maxDistance = 60;
+orb.update();
+
+/* ============================================================
+   LUCI
+   ============================================================ */
+scene.add(new THREE.AmbientLight(0xffffff, 0.55));
+const sun = new THREE.DirectionalLight(0xfff8f0, 0.85);
+sun.position.set(8,14,7); sun.castShadow=true;
+sun.shadow.mapSize.set(2048,2048);
+sun.shadow.camera.left=-15; sun.shadow.camera.right=15;
+sun.shadow.camera.top=15;   sun.shadow.camera.bottom=-15;
+sun.shadow.camera.far=60; scene.add(sun);
+const fill = new THREE.DirectionalLight(0xc0d8ff,0.35);
+fill.position.set(-6,4,-10); scene.add(fill);
+
+/* ============================================================
+   LAYER SYSTEM
+   ============================================================ */
+const LYR = { struttura:[], tetto:[], scala:[], accessori:[], bbq:[] };
+const pickable = [];
+const wireMats = [];
+
+function reg(obj, lyr, name, dims) {
+  obj.userData.name = name || '';
+  obj.userData.dims = dims || '';
+  obj.userData.lyr  = lyr;
+  obj.traverse(c => {
+    if (!c.isMesh) return;
+    c.castShadow = c.receiveShadow = true;
+    if (c.material && !wireMats.includes(c.material)) wireMats.push(c.material);
+  });
+  if (LYR[lyr]) LYR[lyr].push(obj);
+  scene.add(obj);
+  if (name) pickable.push(obj);
+  return obj;
+}
+
+function tgl(btn) {
+  const l = btn.dataset.l;
+  const on = btn.classList.toggle('on');
+  (LYR[l] || []).forEach(o => o.visible = on);
+}
+
+/* ============================================================
+   MATERIALI
+   ============================================================ */
+const mWall  = new THREE.MeshPhongMaterial({color:0xB8A888, side:THREE.DoubleSide});
+const mRoof  = new THREE.MeshPhongMaterial({color:0xA89878});
+const mFloor = new THREE.MeshPhongMaterial({color:0x9A8C7A});
+const mDoor  = new THREE.MeshPhongMaterial({color:0x7A8FAA});
+const mMetal = new THREE.MeshPhongMaterial({color:0x606468});   /* acciaio */
+const mGrate = new THREE.MeshPhongMaterial({color:0x707880, wireframe:false}); /* graticciata */
+const mRail  = new THREE.MeshPhongMaterial({color:0x505860});
+const mGnd   = new THREE.MeshPhongMaterial({color:0xD0C8B0});
+const mLamp  = new THREE.MeshPhongMaterial({color:0xF0F060, emissive:0x888800, emissiveIntensity:0.45});
+const mSens  = new THREE.MeshPhongMaterial({color:0xFF4422});
+const mExtr  = new THREE.MeshPhongMaterial({color:0x888890});
+const mBBQ   = new THREE.MeshPhongMaterial({color:0x404444});
+const mInox  = new THREE.MeshPhongMaterial({color:0xA0AAAA, shininess:120});
+
+/* ============================================================
+   HELPERS
+   ============================================================ */
+function bx(w,h,d)     { return new THREE.BoxGeometry(w,h,d); }
+function cy(r,h,s)     { return new THREE.CylinderGeometry(r,r,h,s||12); }
+function sp(r)         { return new THREE.SphereGeometry(r,8,8); }
+function mk(geo,mat)   { return new THREE.Mesh(geo,mat); }
+function at(m,x,y,z)   { m.position.set(x,y,z); return m; }
+
+/* gruppo semplice da una o più mesh */
+function grp(...ms) { const g=new THREE.Group(); ms.forEach(m=>g.add(m)); return g; }
+
+/* cilindro orientato tra due punti 3D (per tubi, barre) */
+function bar(x1,y1,z1,x2,y2,z2,r,mat) {
+  const dx=x2-x1,dy=y2-y1,dz=z2-z1;
+  const len=Math.sqrt(dx*dx+dy*dy+dz*dz);
+  const m=mk(cy(r,len,8),mat);
+  m.position.set((x1+x2)/2,(y1+y2)/2,(z1+z2)/2);
+  m.quaternion.setFromUnitVectors(
+    new THREE.Vector3(0,1,0),
+    new THREE.Vector3(dx,dy,dz).normalize());
+  return m;
+}
+
+/* ============================================================
+   DIMENSIONI SHELTER
+   ============================================================ */
+const SL=6.000, SW=2.500, SH=2.591, WT=0.080;
+
+/* ============================================================
+   BASAMENTO
+   ============================================================ */
+const gndGrp = grp(at(mk(bx(SL+1.2,0.08,SW+1.2),mGnd),0,-0.04,0));
+reg(gndGrp,'struttura','Platea in calcestruzzo armato',
+  'L: 7200 mm · W: 3700 mm\nSpessore: 200 mm\nMateriale: C25/30, Ø10 @ 200 mm');
+const grid=new THREE.GridHelper(26,26,0xcccccc,0xe0e0e0);
+grid.position.y=-0.001; scene.add(grid);
+
+/* ============================================================
+   STRUTTURA: PARETI
+   ============================================================ */
+function wall(name,w,h,d,x,y,z) {
+  return reg(grp(at(mk(bx(w,h,d),mWall),0,0,0)),
+    'struttura',name,
+    `L:${(w*1000).toFixed(0)} mm · H:${(h*1000).toFixed(0)} mm · Sp:80 mm\nPannello sandwich acciaio/lana di roccia RAL 1019`);
+}
+/* lato corto = X = ±3.0; lato lungo = Z = ±1.25 */
+const DW=0.900, DH=2.100, SW2=(SL-DW)/2;
+const fL=wall('Pannello frontale sinistro',SW2,SH,WT,   -(DW/2+SW2/2),SH/2,-SW/2);
+const fR=wall('Pannello frontale destro',  SW2,SH,WT,    (DW/2+SW2/2),SH/2,-SW/2);
+const ft=wall('Pannello sopra porta',       DW,SH-DH,WT,  0,DH+(SH-DH)/2,-SW/2);
+fL.position.x=-(DW/2+SW2/2); fL.position.y=SH/2; fL.position.z=-SW/2;
+fR.position.x= (DW/2+SW2/2); fR.position.y=SH/2; fR.position.z=-SW/2;
+ft.position.set(0,DH+(SH-DH)/2,-SW/2);
+wall('Parete posteriore',SL,SH,WT, 0,SH/2,SW/2).position.set(0,SH/2,SW/2);
+wall('Parete laterale sinistra',WT,SH,SW, -SL/2,SH/2,0).position.set(-SL/2,SH/2,0);
+wall('Parete laterale destra',  WT,SH,SW,  SL/2,SH/2,0).position.set( SL/2,SH/2,0);
+
+/* Pavimento interno */
+reg(grp(at(mk(bx(SL-WT*2,0.050,SW-WT*2),mFloor),0,0,0)),
+  'struttura','Pavimento interno (lamiera striata)',
+  `L:${((SL-WT*2)*1000).toFixed(0)}·W:${((SW-WT*2)*1000).toFixed(0)} mm\nSp:5 mm zincata antiscivolo`)
+  .position.set(0,0.025,0);
+
+/* ============================================================
+   PORTA SCORREVOLE (frontale, apertamente spostata a dx)
+   ============================================================ */
+const doorG=grp(
+  at(mk(bx(DW,DH,0.042),mDoor),0,0,0),
+  at(mk(bx(DW*2.2,0.032,0.032),mMetal),0,DH+0.02,0.025), /* binario */
+  at(mk(bx(0.025,0.12,0.025),mInox),DW/2-0.05,DH/2,0.025)) /* maniglia */;
+reg(doorG,'struttura','Porta scorrevole frontale',
+  'L:900 · H:2100 · Sp:42 mm\nTipo: scorrevole su binario\nMateriale: pannello sandwich\nFinish: RAL 7035\nManiglia: inox').position.set(DW*0.55,DH/2,-SW/2-0.021);
+
+/* ============================================================
+   FINESTRONE FRONTALE SCORREVOLE
+   Parete frontale (Z = -SW/2), centrato a X=0
+   Dim: 1800×1400 mm (quasi tutta la larghezza libera)
+   Metà fissa sx + metà scorrevole dx
+   ============================================================ */
+{
+  const FW=1.80, FH=1.40, FY=RFL+FH/2+0.10, FZ=-SW/2;
+  const mGlass = new THREE.MeshPhongMaterial({color:0xCCE8FF,transparent:true,opacity:0.30,side:THREE.DoubleSide});
+  const mAlum  = new THREE.MeshPhongMaterial({color:0xB0B8C0,shininess:80});
+
+  /* telaio esterno perimetrale */
+  [[FW+0.08,0.06,0.06, 0, FY+FH/2+0.03, FZ],
+   [FW+0.08,0.06,0.06, 0, FY-FH/2-0.03, FZ],
+   [0.06,FH+0.06,0.06, -FW/2-0.03, FY, FZ],
+   [0.06,FH+0.06,0.06,  FW/2+0.03, FY, FZ],
+  ].forEach(([w,h,d,x,y,z])=>
+    reg(grp(at(mk(bx(w,h,d),mAlum),0,0,0)),
+      'struttura','Telaio finestrone frontale','Alluminio 60×60mm anodizzato argento')
+    .position.set(x,y,z));
+
+  /* montante centrale */
+  reg(grp(at(mk(bx(0.06,FH,0.06),mAlum),0,0,0)),
+    'struttura','Montante centrale finestrone','Alluminio 60×60mm')
+    .position.set(0,FY,FZ);
+
+  /* anta fissa (sinistra) */
+  reg(grp(at(mk(bx(FW/2-0.06,FH-0.06,0.024),mGlass),0,0,0)),
+    'struttura','Finestrone frontale — anta fissa (sx)',
+    `L: ${((FW/2-0.06)*1000).toFixed(0)} mm · H:${((FH-0.06)*1000).toFixed(0)} mm\nVetrocamera 4+12+4 basso-emissivo\nUw: 1.1 W/m²K · Rw: 34 dB`)
+    .position.set(-FW/4,FY,FZ-0.012);
+
+  /* anta scorrevole (destra, leggermente aperta) */
+  reg(grp(
+    at(mk(bx(FW/2-0.06,FH-0.06,0.024),mGlass),0,0,0),
+    at(mk(bx(0.018,0.140,0.028),mAlum),FW/4-0.10,0,0.016)), /* maniglia */
+    'struttura','Finestrone frontale — anta scorrevole (dx)',
+    `L: ${((FW/2-0.06)*1000).toFixed(0)} mm · H:${((FH-0.06)*1000).toFixed(0)} mm\nScorrimento orizzontale\nVetrocamera 4+12+4 basso-emissivo\nChiusura: leva monomarcatura\n(mostrata parzialmente aperta)`)
+    .position.set(FW/4+0.12,FY,FZ-0.012);  /* spostata +12cm → aperta */
+
+  /* binario superiore scorrevole */
+  reg(grp(at(mk(bx(FW+0.10,0.030,0.040),mAlum),0,0,0)),
+    'struttura','Binario superiore finestrone scorrevole','Alluminio estruso 30×40mm')
+    .position.set(0,FY+FH/2+0.015,FZ-0.020);
+
+  /* griglia di protezione esterna */
+  reg(grp(at(mk(bx(FW+0.12,FH+0.12,0.012),mMetal),0,0,0)),
+    'struttura','Griglia protezione finestrone (esterna)',
+    `L:${((FW+0.12)*1000).toFixed(0)} · H:${((FH+0.12)*1000).toFixed(0)} mm\nPiattina Fe 30×4 @ 60mm · Zincata a caldo\nFissaggio: tasselli M10 inox`)
+    .position.set(0,FY,FZ-0.030);
+}
+
+/* ============================================================
+   FINESTRA SCORREVOLE laterale sinistra (parete lunga Z=-1.25)
+   Dim: 800×600 mm, centrata a X=+1.5 m, H=1.20 m dal pav.
+   ============================================================ */
+const WIN_W=0.80, WIN_H=0.60, WIN_Z=-SW/2, WIN_Y=1.20+WIN_H/2;
+/* Telaio esterno in alluminio (4 lati) */
+[[WIN_W+0.06,0.05,0.05, 0,WIN_Y+WIN_H/2+0.025,WIN_Z],  /* top */
+ [WIN_W+0.06,0.05,0.05, 0,WIN_Y-WIN_H/2-0.025,WIN_Z],  /* bottom */
+ [0.05,WIN_H,0.05, -WIN_W/2-0.025,WIN_Y,WIN_Z],          /* left */
+ [0.05,WIN_H,0.05,  WIN_W/2+0.025,WIN_Y,WIN_Z],          /* right */
+].forEach(([w,h,d,x,y,z])=>{
+  reg(grp(at(mk(bx(w,h,d),mMetal),0,0,0)),'struttura','Telaio finestra scorrevole (alluminio)',
+    'Profilo: alluminio estruso 50×50mm\nFinish: anodizzato naturale').position.set(x,y,z);
+});
+/* Anta fissa (vetrocamera 4+12+4) */
+const winFixed=grp(
+  at(mk(bx(WIN_W/2-0.01,WIN_H-0.01,0.028),
+    new THREE.MeshPhongMaterial({color:0xCCE8FF,transparent:true,opacity:0.35})),0,0,0));
+reg(winFixed,'struttura','Finestra scorrevole — anta fissa',
+  'Larghezza: 400mm (fissa)\nAltezza: 590mm\nVetro: 4+12+4 mm basso-emissivo\nUw: 1.1 W/m²K\nRw: 34 dB')
+  .position.set(1.5-WIN_W/4,WIN_Y,WIN_Z-0.014);
+/* Anta mobile (scorrevole) */
+const winSlide=grp(
+  at(mk(bx(WIN_W/2-0.01,WIN_H-0.01,0.028),
+    new THREE.MeshPhongMaterial({color:0xCCE8FF,transparent:true,opacity:0.35})),0,0,0),
+  at(mk(bx(0.012,0.120,0.025),mInox),WIN_W/4-0.03,0,0.018)); /* maniglia */
+reg(winSlide,'struttura','Finestra scorrevole — anta mobile',
+  'Larghezza: 400mm (mobile)\nScorrimento: orizzontale su binario\nVetro: 4+12+4 mm basso-emissivo\nChiusura: leva monomarcatura\nIP: non applicabile — interno shelter')
+  .position.set(1.5+WIN_W/4+0.05,WIN_Y,WIN_Z-0.008); /* spostata lateralmente (aperta) */
+/* Griglia di protezione esterna */
+const winGrid=grp(at(mk(bx(WIN_W+0.10,WIN_H+0.10,0.015),mMetal),0,0,0));
+reg(winGrid,'struttura','Griglia protezione finestra (esterna)',
+  'L:900 × H:700 mm\nMateriale: piattina Fe 20×4 @ 50mm\nZincata a caldo\nFissaggio: 4 bulloni M8 inox')
+  .position.set(1.5,WIN_Y,WIN_Z-0.025);
+
+/* ============================================================
+   TETTO + BALAUSTRA
+   ============================================================ */
+/* Copertura */
+const roofG=grp(at(mk(bx(SL,0.082,SW),mRoof),0,0,0));
+reg(roofG,'tetto','Copertura calpestabile',
+  'L:6000 · W:2500 · Sp:82 mm\nPannello sandwich\nPortata: ≥ 300 kg/m²\nRAL 1019').position.set(0,SH+0.041,0);
+
+const RY=SH+0.082;   /* quota piano tetto */
+const PH=1.000, PS=0.050, RS=0.038;
+
+function posts(axis,v0,v1,fix) {
+  const n=Math.max(1,Math.round((v1-v0)/1.1));
+  const step=(v1-v0)/n;
+  const g=new THREE.Group();
+  for(let i=0;i<=n;i++){
+    const v=v0+i*step;
+    const pm=at(mk(bx(PS,PH,PS),mMetal),
+      axis==='x'?v:fix, RY+PH/2, axis==='x'?fix:v);
+    g.add(pm);
+  }
+  return g;
+}
+function rail(x,y,z,w,d) { return at(mk(bx(w,RS,d),mRail),x,y,z); }
+
+/* Frontale */
+const balFront=new THREE.Group();
+balFront.add(posts('x',-SL/2+0.05,SL/2-0.05,-SW/2+PS/2));
+balFront.add(rail(0,RY+PH,-SW/2+RS/2,SL-0.1,RS));
+balFront.add(rail(0,RY+PH*.55,-SW/2+RS/2,SL-0.1,RS));
+reg(balFront,'tetto','Balaustra frontale copertura','Montanti 50×50 · Correnti 38 mm\nH:1000 mm · acciaio zincato S275');
+
+/* Sinistra */
+const balSx=new THREE.Group();
+balSx.add(posts('z',-SW/2+0.05,SW/2-0.05,-SL/2+PS/2));
+balSx.add(rail(-SL/2+RS/2,RY+PH,0,RS,SW-0.1));
+balSx.add(rail(-SL/2+RS/2,RY+PH*.55,0,RS,SW-0.1));
+reg(balSx,'tetto','Balaustra laterale sinistra copertura','Montanti 50×50 · Correnti 38 mm\nH:1000 mm · acciaio zincato');
+
+/* Posteriore: gap X=1.0÷3.1 per uscita scala */
+const balRear=new THREE.Group();
+balRear.add(posts('x',-SL/2+0.05,0.85,SW/2-PS/2));
+balRear.add(rail((-SL/2+0.85)/2,RY+PH,SW/2-RS/2,(SL/2+0.85-0.1),RS));
+balRear.add(rail((-SL/2+0.85)/2,RY+PH*.55,SW/2-RS/2,(SL/2+0.85-0.1),RS));
+reg(balRear,'tetto','Balaustra posteriore copertura','Gap X=1.0÷3.0 m per accesso scala\nMontanti 50×50 · Correnti 38 mm');
+
+/* Destra: solo zona frontale (scala sale lungo questo lato) */
+const balDx=new THREE.Group();
+balDx.add(posts('z',-SW/2+0.05,-0.30,SL/2-PS/2));
+balDx.add(rail(SL/2-RS/2,RY+PH,(-SW/2-0.3)/2,RS,(SW/2-0.3-0.1)));
+balDx.add(rail(SL/2-RS/2,RY+PH*.55,(-SW/2-0.3)/2,RS,(SW/2-0.3-0.1)));
+reg(balDx,'tetto','Balaustra destra copertura (parziale)','Parziale: zona frontale\nGap per accesso scala lato corto');
+
+/* ============================================================
+   SCALA METALLICA
+   Lato corto destro (X=+3 m)  →  piè d'oca  →  lato lungo posteriore
+   ============================================================ */
+const N=14, RIS=SH/N, PED=0.280, STW=1.000;
+const TREAD_H=0.030;   /* spessore pedana (lamiera graticciata) */
+const UPN_H  =0.200;   /* altezza longherone UPN */
+const UPN_W  =0.010;   /* anima longherone */
+
+/* centro X prima rampa (fuori parete destra) */
+const F1_XC = SL/2 + 0.05 + STW/2;   /* = 3.55 m */
+const F1_Z0  = -0.20;                   /* Z bordo anteriore primo gradino */
+
+/* ── PRIMA RAMPA: 7 gradini in direzione +Z ── */
+const scalaG = new THREE.Group();
+
+for (let i=0;i<7;i++) {
+  const zc = F1_Z0 + i*PED + PED/2;
+  const yt  = (i+1)*RIS;
+  /* pedana lamiera graticciata */
+  scalaG.add(at(mk(bx(STW,TREAD_H,PED),mGrate),F1_XC, yt-TREAD_H/2, zc));
+  /* profilato bordo anteriore (L 40×40) */
+  scalaG.add(at(mk(bx(STW,0.040,0.012),mMetal),F1_XC, yt-0.020, F1_Z0+i*PED+0.006));
+}
+
+/* Longheroni UPN prima rampa */
+const L1=Math.sqrt(Math.pow(7*PED,2)+Math.pow(7*RIS,2));
+const A1=Math.atan2(7*RIS,7*PED);
+[-1,1].forEach(s=>{
+  const lng=mk(bx(UPN_W,UPN_H,L1),mMetal);
+  lng.position.set(F1_XC+s*(STW/2+UPN_W/2), 7*RIS/2, F1_Z0+7*PED/2);
+  lng.rotation.x=-A1;
+  scalaG.add(lng);
+});
+
+/* ── PIANEROTTOLO (piè d'oca) ── */
+const LAND_Y  = 7*RIS;
+const LAND_Z0 = F1_Z0+7*PED;   /* ~1.76 m */
+const LAND_D  = STW;             /* profondità pianerottolo */
+const LAND_W  = STW+0.30;
+const LAND_XC = SL/2+0.05+LAND_W/2;
+const LAND_ZC = LAND_Z0+LAND_D/2;
+
+scalaG.add(at(mk(bx(LAND_W,0.008,LAND_D),mGrate),LAND_XC,LAND_Y,LAND_ZC));
+/* bordino perimetrale pianerottolo */
+[[LAND_W,0.060,0.012,LAND_XC,LAND_Y-0.030,LAND_Z0+0.006],
+ [LAND_W,0.060,0.012,LAND_XC,LAND_Y-0.030,LAND_Z0+LAND_D-0.006],
+ [0.012,0.060,LAND_D,LAND_XC-LAND_W/2+0.006,LAND_Y-0.030,LAND_ZC],
+ [0.012,0.060,LAND_D,LAND_XC+LAND_W/2-0.006,LAND_Y-0.030,LAND_ZC]
+].forEach(([w,h,d,x,y,z])=>scalaG.add(at(mk(bx(w,h,d),mMetal),x,y,z)));
+
+/* ── SECONDA RAMPA: 7 gradini in direzione -X (lato lungo posteriore) ── */
+const F2_ZC = SW/2+0.05+STW/2;    /* centro Z = ~1.80 m */
+const F2_X0 = SL/2+0.05;          /* bordo destro primo gradino = 3.05 m */
+
+for (let i=0;i<7;i++) {
+  const xc = F2_X0 - i*PED - PED/2;
+  const yt  = LAND_Y + (i+1)*RIS;
+  scalaG.add(at(mk(bx(PED,TREAD_H,STW),mGrate), xc, yt-TREAD_H/2, F2_ZC));
+  scalaG.add(at(mk(bx(0.012,0.040,STW),mMetal), F2_X0-i*PED+0.006, yt-0.020, F2_ZC));
+}
+
+/* Longheroni UPN seconda rampa */
+const L2=Math.sqrt(Math.pow(7*PED,2)+Math.pow(7*RIS,2));
+const A2=Math.atan2(7*RIS,7*PED);
+[-1,1].forEach(s=>{
+  const lng=mk(bx(L2,UPN_H,UPN_W),mMetal);
+  lng.position.set(F2_X0-7*PED/2, LAND_Y+7*RIS/2, F2_ZC+s*(STW/2+UPN_W/2));
+  lng.rotation.z=A2;
+  scalaG.add(lng);
+});
+
+/* ── CORRIMANI (tubi Ø42 inox) ── */
+/* Prima rampa — lato esterno */
+const CR=0.022;
+function crBar(x1,y1,z1,x2,y2,z2,c) { const b2=bar(x1,y1,z1,x2,y2,z2,c,mInox); scalaG.add(b2); }
+crBar(F1_XC+STW/2+0.05,0.050,-0.25, F1_XC+STW/2+0.05,7*RIS+0.90,F1_Z0+7*PED, CR);
+crBar(F1_XC+STW/2+0.05,7*RIS+0.90,F1_Z0+7*PED, LAND_XC+LAND_W/2+0.05,LAND_Y+0.90,LAND_ZC+LAND_D/2, CR);
+/* Seconda rampa — lato esterno */
+crBar(F2_X0+0.05,LAND_Y+0.050,F2_ZC+STW/2+0.05, F2_X0-7*PED,SH+0.90,F2_ZC+STW/2+0.05, CR);
+/* Montanti corrimano prima rampa */
+for(let i=0;i<=3;i++){
+  const z=F1_Z0+(7*PED/3)*i, y=(7*RIS/3)*i+RIS;
+  scalaG.add(at(mk(cy(CR*0.8,0.900,8),mInox),F1_XC+STW/2+0.05,y+0.450,z));
+}
+/* Montanti corrimano seconda rampa */
+for(let i=0;i<=3;i++){
+  const x=F2_X0-(7*PED/3)*i, y=LAND_Y+(7*RIS/3)*i+RIS;
+  scalaG.add(at(mk(cy(CR*0.8,0.900,8),mInox),x,y+0.450,F2_ZC+STW/2+0.05));
+}
+
+/* Piedini di base scala */
+[F1_XC-STW/2-0.02,F1_XC+STW/2+0.02].forEach(px=>{
+  scalaG.add(at(mk(bx(0.150,0.012,0.150),mMetal),px,-0.006,F1_Z0+PED/2));
+});
+
+reg(scalaG,'scala','Scala metallica piè d\'oca',
+  '14 gradini totali (7+7)\nPedana: lamiera graticciata 30mm\nLongheroni: UPN200 acciaio S275\nCorrimano: tubo inox Ø42 mm\nPedata: 280 mm · Alzata: '+(RIS*1000).toFixed(0)+' mm\n1° rampa: lato corto destra (asse Z)\nPianerottolo a quota: '+(LAND_Y*1000).toFixed(0)+' mm\n2° rampa: lato lungo posteriore (asse X)');
+
+/* ============================================================
+   ESTRATTORE FUMO / CALORE (EFC)
+   ============================================================ */
+const efc=new THREE.Group();
+efc.add(at(mk(bx(0.50,0.25,0.50),mExtr),0,0,0));
+efc.add(at(mk(cy(0.090,0.38,10),mExtr),0,0.315,0));
+efc.add(at(mk(cy(0.160,0.030,12),mExtr),0,0.50,0));
+reg(efc,'accessori','Estrattore fumo e calore (EFC)',
+  'Dim. base: 500×500 mm · H corpo: 250 mm\nCamino: Ø180 mm · H: 380 mm\nPortata: 2000 m³/h\nClasse: C300 EN 12101-3 · IP54').position.set(-1.5,SH+0.082+0.125,-.30);
+
+/* ============================================================
+   SENSORI GAS  — Dräger Polytron 5200
+   MONTATI IN ALTO (metano CH4 < aria → accumulo a soffitto)
+   H = SH - 0.30 m  (a 30 cm dal soffitto)
+   ============================================================ */
+[
+  [-1.8, -SW/2+WT+0.05, 'Dräger Polytron 5200 — CH4 (zona sinistra)'],
+  [ 1.8,  SW/2-WT-0.05, 'Dräger Polytron 5200 — CH4 (zona destra)'],
+].forEach(([sx,sz,name])=>{
+  const sg=new THREE.Group();
+  /* corpo sensore */
+  sg.add(at(mk(bx(0.100,0.160,0.085),mSens),0,0,0));
+  /* testa di misura / cartuccia */
+  sg.add(at(mk(cy(0.030,0.050,10),mMetal),0,-0.105,0));
+  /* indicatore LED */
+  sg.add(at(mk(sp(0.012),mLamp),0.035,0.055,0.043));
+  reg(sg,'accessori',name,
+    'Modello: Dräger Polytron 5200\nGas target: CH4 (metano)\nCartuccia: EC 4V-A1 0–100% LEL\nRange: 0–100% LEL CH4\nPrecisione: ±3% LEL\nUscita: 4–20 mA + relè\nProtez: IP66/67 · Ex ia IIC T4\nH installazione: '+(SH-0.30)*1000+' mm\n(in alto: metano più leggero dell\'aria)')
+    .position.set(sx, SH-0.30, sz);
+});
+
+/* ============================================================
+   LAMPADE LED IP65 (4 pz.)
+   ============================================================ */
+[[-2.0,-SW/2],[2.0,-SW/2],[-2.0,SW/2],[2.0,SW/2]].forEach(([lx,lz],i)=>{
+  const lg=grp(
+    at(mk(bx(0.290,0.065,0.075),mLamp),0,0,0),
+    at(mk(bx(0.295,0.040,0.080),mMetal),0,-0.052,0));
+  reg(lg,'accessori',`Lampada LED IP65 n.${i+1}/4`,
+    'Potenza: 36 W · 3600 lm · 4000 K\nL:290×H:65×P:75 mm\nProtez: IP65 – IK08\nClasse I · 230 Vac')
+    .position.set(lx, SH-0.28, lz);
+});
+
+/* ============================================================
+   AREA BBQ + PANCA (copertura)
+   ============================================================ */
+const bbqG=new THREE.Group();
+/* tavolo cottura */
+bbqG.add(at(mk(bx(1.20,0.028,0.65),mInox),0,0,0));
+[[-0.54,-0.28],[0.54,-0.28],[-0.54,0.28],[0.54,0.28]].forEach(([dx,dz])=>
+  bbqG.add(at(mk(bx(0.050,0.870,0.050),mBBQ),dx,-0.449,dz)));
+bbqG.add(at(mk(bx(1.10,0.020,0.55),mBBQ),0,-0.550,0)); /* ripiano */
+/* bombola propano */
+bbqG.add(at(mk(cy(0.130,0.600),mBBQ),0.80,-0.285,0));
+/* panca */
+bbqG.add(at(mk(bx(1.80,0.035,0.48),mBBQ),-1.20,-0.440,0));
+[[-2.0,-0.20],[-2.0,0.20]].forEach(([dx,dz])=>
+  bbqG.add(at(mk(bx(0.050,0.430,0.050),mBBQ),dx,-0.660,dz)));
+
+reg(bbqG,'bbq','Area BBQ + panca copertura',
+  'Piano cottura: 1200×650 mm · inox AISI 304\nH tavolo: 900 mm\nBombola: propano 15 kg\nPanca: 1800×480 mm\nCarico copertura per zona BBQ: ≥ 400 kg/m²')
+  .position.set(1.50, RY+0.914, 0);
+
+/* ============================================================
+   VISTE PRESET
+   ============================================================ */
+const TGT = new THREE.Vector3(0,1.3,0);
+function sv(v){
+  document.querySelectorAll('#controls button').forEach(b=>b.classList.remove('active'));
+  orb.target.copy(TGT);
+  switch(v){
+    case 'iso':   camera.position.set(11,9,13); break;
+    case 'front': camera.position.set(0,SH/2,-14); break;
+    case 'rear':  camera.position.set(0,SH/2, 14); break;
+    case 'side':  camera.position.set(-14,SH/2,0); break;
+    case 'stair': camera.position.set(8,5,7); orb.target.set(3.5,2,1.5); break;
+    case 'top':   camera.position.set(0,14,0); orb.target.set(0,0,0);    break;
+  }
+  camera.lookAt(orb.target);
+  orb.update();
+  const b=document.getElementById('b-'+v);
+  if(b) b.classList.add('active');
+}
+
+/* ============================================================
+   WIREFRAME TOGGLE
+   ============================================================ */
+let wire=false;
+function twire(){
+  wire=!wire;
+  wireMats.forEach(m=>m.wireframe=wire);
+  document.getElementById('b-wire').classList.toggle('active',wire);
+}
+
+/* ============================================================
+   RAYCASTING
+   ============================================================ */
+const ray=new THREE.Raycaster();
+const mv=new THREE.Vector2();
+let _dn={x:0,y:0},_drag=false;
+canvas.addEventListener('mousedown',e=>{_dn={x:e.clientX,y:e.clientY};_drag=false;});
+canvas.addEventListener('mousemove',e=>{if(Math.abs(e.clientX-_dn.x)>4||Math.abs(e.clientY-_dn.y)>4)_drag=true;});
+canvas.addEventListener('mouseup',e=>{
+  if(_drag)return;
+  mv.set((e.clientX/window.innerWidth)*2-1,-(e.clientY/window.innerHeight)*2+1);
+  ray.setFromCamera(mv,camera);
+  const hits=ray.intersectObjects(pickable,true);
+  let found=null;
+  for(const h of hits){
+    let o=h.object;
+    while(o&&!o.userData.name)o=o.parent;
+    if(o&&o.userData.name){found=o;break;}
+  }
+  const pan=document.getElementById('info-panel');
+  if(found){
+    document.getElementById('pname').textContent=found.userData.name;
+    document.getElementById('pdims').textContent=found.userData.dims;
+    pan.classList.remove('hidden');
+  } else pan.classList.add('hidden');
+});
+function closePanel(){document.getElementById('info-panel').classList.add('hidden');}
+
+/* ============================================================
+   RESIZE / RENDER
+   ============================================================ */
+window.addEventListener('resize',()=>{
+  camera.aspect=window.innerWidth/window.innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(window.innerWidth,window.innerHeight);
+});
+setTimeout(()=>document.getElementById('hint').style.opacity='0',5000);
+
+(function animate(){
+  requestAnimationFrame(animate);
+  orb.update();
+  renderer.render(scene,camera);
+})();
+</script>
+</body>
+</html>

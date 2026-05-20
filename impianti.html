@@ -1,0 +1,672 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Shelter 20ft — Impianti Idrico &amp; Elettrico</title>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+body { background:#fff; font-family:'Segoe UI',Arial,sans-serif; overflow:hidden; }
+#c { display:block; width:100vw; height:100vh; }
+
+#title-bar {
+  position:fixed; top:12px; left:12px;
+  background:rgba(255,255,255,.97); border:1px solid #ddd;
+  border-radius:10px; padding:9px 16px;
+  box-shadow:0 2px 10px rgba(0,0,0,.12); pointer-events:none;
+}
+#title-bar h2 { font-size:15px; color:#1a3a6b; font-weight:700; }
+#title-bar p  { font-size:11px; color:#777; margin-top:2px; }
+#title-bar a  { font-size:11px; color:#2278EE; text-decoration:none; pointer-events:all; }
+
+#info-panel {
+  position:fixed; top:12px; right:12px;
+  background:rgba(255,255,255,.97); border:1px solid #ccc;
+  border-radius:10px; padding:13px 17px; width:300px;
+  box-shadow:0 4px 16px rgba(0,0,0,.14); font-size:13px;
+  transition:opacity .2s;
+}
+#info-panel.hidden { opacity:0; pointer-events:none; }
+#info-panel h3 { color:#1a3a6b; font-size:14px; margin-bottom:8px;
+  border-bottom:2px solid #e0e8f5; padding-bottom:5px; }
+#info-panel .dim {
+  background:#f4f6fa; border-radius:6px; padding:9px 11px;
+  font-family:Consolas,monospace; font-size:11.5px; line-height:1.9;
+  white-space:pre-wrap; color:#333; }
+#info-panel .close-btn {
+  position:absolute; top:9px; right:13px;
+  background:none; border:none; cursor:pointer;
+  font-size:18px; color:#aaa; line-height:1; }
+
+/* layer toggles */
+#layers {
+  position:fixed; top:12px; left:50%; transform:translateX(-50%);
+  background:rgba(255,255,255,.97); border:1px solid #ddd;
+  border-radius:10px; padding:7px 11px;
+  box-shadow:0 2px 10px rgba(0,0,0,.10);
+  display:flex; gap:5px; flex-wrap:wrap; justify-content:center;
+}
+#layers button {
+  padding:5px 11px; border:2px solid #ccc; border-radius:18px;
+  background:#fff; cursor:pointer; font-size:11.5px; font-weight:600;
+  transition:all .15s; white-space:nowrap; color:#555;
+}
+#layers button.on { color:#fff; }
+#layers button[data-l="struttura"].on { background:#99AABB; border-color:#99AABB; }
+#layers button[data-l="pavimento"].on { background:#B8A060; border-color:#B8A060; }
+#layers button[data-l="idrico"].on    { background:#1166DD; border-color:#1166DD; }
+#layers button[data-l="elettrico"].on { background:#EE7700; border-color:#EE7700; }
+#layers button[data-l="sanitari"].on  { background:#338844; border-color:#338844; }
+
+/* view buttons */
+#controls {
+  position:fixed; bottom:16px; left:50%; transform:translateX(-50%);
+  display:flex; gap:5px; background:rgba(255,255,255,.97);
+  border:1px solid #ddd; border-radius:10px; padding:7px 11px;
+  box-shadow:0 2px 10px rgba(0,0,0,.10);
+}
+#controls button {
+  padding:6px 12px; border:1px solid #ccc; border-radius:6px;
+  background:#fff; cursor:pointer; font-size:12px; color:#333; transition:all .15s;
+}
+#controls button:hover { background:#eef2fa; }
+#controls button.active { background:#1a3a6b; color:#fff; border-color:#1a3a6b; }
+
+/* legend */
+#legend {
+  position:fixed; bottom:62px; left:12px;
+  background:rgba(255,255,255,.97); border:1px solid #ddd;
+  border-radius:10px; padding:10px 13px;
+  box-shadow:0 2px 10px rgba(0,0,0,.10);
+  font-size:11px; line-height:2.1;
+}
+.dot { display:inline-block; width:11px; height:11px;
+  border-radius:2px; margin-right:6px; vertical-align:middle; }
+
+#hint {
+  position:fixed; bottom:60px; right:12px;
+  background:rgba(0,0,0,.45); color:#fff;
+  padding:5px 12px; border-radius:18px; font-size:11px;
+  pointer-events:none; transition:opacity 1.5s;
+}
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+
+<div id="title-bar">
+  <h2>Shelter 20ft — Impianti</h2>
+  <p>Idrico · Elettrico · Sanitari · Pavimento galleggiante</p>
+  <a href="index.html">← Torna al modello struttura</a>
+</div>
+
+<div id="layers">
+  <button data-l="struttura" class="on" onclick="tgl(this)">Struttura</button>
+  <button data-l="pavimento" class="on" onclick="tgl(this)">Pav. galleggiante</button>
+  <button data-l="idrico"    class="on" onclick="tgl(this)">Impianto idrico</button>
+  <button data-l="elettrico" class="on" onclick="tgl(this)">Impianto elettrico</button>
+  <button data-l="sanitari"  class="on" onclick="tgl(this)">Sanitari / Arredo</button>
+</div>
+
+<div id="info-panel" class="hidden">
+  <button class="close-btn" onclick="document.getElementById('info-panel').classList.add('hidden')">×</button>
+  <h3 id="pname">—</h3>
+  <div class="dim" id="pdims"></div>
+</div>
+
+<div id="controls">
+  <button onclick="sv('iso')"    id="b-iso"    class="active">Vista 3D</button>
+  <button onclick="sv('pianta')" id="b-pianta">Pianta</button>
+  <button onclick="sv('bagno')"  id="b-bagno">Vista bagno</button>
+  <button onclick="sv('qe')"     id="b-qe">Quadro elettrico</button>
+  <button onclick="sv('pipe')"   id="b-pipe">Sotto pavimento</button>
+  <button onclick="sv('front')"  id="b-front">Frontale</button>
+</div>
+
+<div id="legend">
+  <div><span class="dot" style="background:#2278EE"></span>Acqua fredda (AF) · PP-R blu</div>
+  <div><span class="dot" style="background:#EE4422"></span>Acqua calda (AC) · PP-R rosso</div>
+  <div><span class="dot" style="background:#886644"></span>Scarico PVC Ø110</div>
+  <div><span class="dot" style="background:#FF8800"></span>Conduit / canalina elettrica</div>
+  <div><span class="dot" style="background:#FFDD00"></span>Cavi circuiti luce</div>
+  <div><span class="dot" style="background:#EE3322"></span>Cavi circuiti forza</div>
+  <div><span class="dot" style="background:#338844"></span>Sanitari ceramica bianca</div>
+</div>
+
+<div id="hint">Clicca elemento per dettagli · Trascina per ruotare · Scroll zoom</div>
+
+<script src="js/three.min.js"></script>
+<script src="js/OrbitControls.js"></script>
+<script>
+'use strict';
+
+/* ============================================================  RENDERER */
+const canvas = document.getElementById('c');
+const renderer = new THREE.WebGLRenderer({ canvas, antialias:true });
+renderer.setPixelRatio(Math.min(window.devicePixelRatio,2));
+renderer.setSize(window.innerWidth, window.innerHeight);
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+renderer.setClearColor(0xFFFFFF,1);
+
+const scene  = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(44, window.innerWidth/window.innerHeight, 0.05, 200);
+camera.position.set(-6, 5, -8);
+
+const orb = new THREE.OrbitControls(camera, renderer.domElement);
+orb.target.set(-2, 1.2, 0);
+orb.enableDamping=true; orb.dampingFactor=0.07;
+orb.minDistance=0.5; orb.maxDistance=50;
+orb.update();
+
+/* ============================================================  LUCI */
+scene.add(new THREE.AmbientLight(0xffffff,0.65));
+const sun=new THREE.DirectionalLight(0xfff8f0,0.80);
+sun.position.set(6,12,8); sun.castShadow=true;
+sun.shadow.mapSize.set(2048,2048);
+sun.shadow.camera.left=-14; sun.shadow.camera.right=14;
+sun.shadow.camera.top=14;  sun.shadow.camera.bottom=-14;
+sun.shadow.camera.far=60; scene.add(sun);
+const fill=new THREE.DirectionalLight(0xc8d8ff,0.35);
+fill.position.set(-8,4,-6); scene.add(fill);
+
+/* ============================================================  LAYERS */
+const LYR = { struttura:[], pavimento:[], idrico:[], elettrico:[], sanitari:[] };
+const pickable = [];
+
+function reg(obj,lyr,name,dims){
+  obj.userData.name=name||''; obj.userData.dims=dims||'';
+  obj.traverse(c=>{ if(c.isMesh){ c.castShadow=c.receiveShadow=true; } });
+  if(LYR[lyr]) LYR[lyr].push(obj);
+  scene.add(obj);
+  if(name) pickable.push(obj);
+  return obj;
+}
+function tgl(btn){
+  const on=btn.classList.toggle('on');
+  (LYR[btn.dataset.l]||[]).forEach(o=>o.visible=on);
+}
+
+/* ============================================================  MATERIALI
+   Pareti quasi invisibili (opacity 0.08) → si vede tutto l'interno       */
+const mWall   = new THREE.MeshPhongMaterial({color:0xB8C8D8,transparent:true,opacity:0.08,side:THREE.DoubleSide,depthWrite:false});
+const mPart   = new THREE.MeshPhongMaterial({color:0xC0D0E0,transparent:true,opacity:0.10,side:THREE.DoubleSide,depthWrite:false});
+const mRoof   = new THREE.MeshPhongMaterial({color:0xA0B0C0,transparent:true,opacity:0.06,depthWrite:false});
+const mFloor  = new THREE.MeshPhongMaterial({color:0xD4C080,transparent:true,opacity:0.70});
+const mPed    = new THREE.MeshPhongMaterial({color:0x909060});
+const mGnd    = new THREE.MeshPhongMaterial({color:0xD0C8B0});
+/* impianto idrico */
+const mAF     = new THREE.MeshPhongMaterial({color:0x2278EE});
+const mAC     = new THREE.MeshPhongMaterial({color:0xEE4422});
+const mScar   = new THREE.MeshPhongMaterial({color:0x886644});
+const mRaccF  = new THREE.MeshPhongMaterial({color:0x115599});
+const mRaccC  = new THREE.MeshPhongMaterial({color:0xAA2200});
+/* impianto elettrico */
+const mCond   = new THREE.MeshPhongMaterial({color:0xFF8800});
+const mLuce   = new THREE.MeshPhongMaterial({color:0xFFDD00});
+const mForza  = new THREE.MeshPhongMaterial({color:0xEE3322});
+const mQE_bod = new THREE.MeshPhongMaterial({color:0x223344});
+const mQE_dor = new THREE.MeshPhongMaterial({color:0x3366AA});
+const mQE_scr = new THREE.MeshPhongMaterial({color:0x112233});
+/* sanitari */
+const mCer    = new THREE.MeshPhongMaterial({color:0xF8F6F2,shininess:80});   /* ceramica */
+const mInox   = new THREE.MeshPhongMaterial({color:0xB0BBBB,shininess:120});
+const mVetro  = new THREE.MeshPhongMaterial({color:0xCCEEFF,transparent:true,opacity:0.45});
+const mLamp2  = new THREE.MeshPhongMaterial({color:0xFFF880,emissive:0x888800,emissiveIntensity:0.5});
+const mBoiler = new THREE.MeshPhongMaterial({color:0xDDDDCC});
+
+/* ============================================================  HELPERS */
+function bx(w,h,d)   { return new THREE.BoxGeometry(w,h,d); }
+function cy(r,h,s)   { return new THREE.CylinderGeometry(r,r,h,s||12); }
+function sp(r)       { return new THREE.SphereGeometry(r,8,6); }
+function mk(g,m)     { return new THREE.Mesh(g,m); }
+function at(m,x,y,z) { m.position.set(x,y,z); return m; }
+function grp(...ms)  { const g=new THREE.Group(); ms.forEach(m=>g.add(m)); return g; }
+
+/* cilindro orientato tra due punti */
+function tube(x1,y1,z1,x2,y2,z2,r,mat){
+  const dx=x2-x1,dy=y2-y1,dz=z2-z1;
+  const len=Math.sqrt(dx*dx+dy*dy+dz*dz);
+  const m=mk(cy(r,len,10),mat);
+  m.position.set((x1+x2)/2,(y1+y2)/2,(z1+z2)/2);
+  m.quaternion.setFromUnitVectors(
+    new THREE.Vector3(0,1,0),
+    new THREE.Vector3(dx,dy,dz).normalize());
+  return m;
+}
+function raccord(x,y,z,r,mat){ return at(mk(sp(r*1.6),mat),x,y,z); }
+
+/* ============================================================  DIMENSIONI */
+const SL=6.0, SW=2.5, SH=2.591, WT=0.080;
+const RFL=0.160;   /* quota finito pavimento galleggiante */
+const YPIPE=0.068; /* asse tubazioni sotto pav.  */
+const YDUCT=0.100; /* asse cavidotti elettrici   */
+/* BAGNO: X=-3.0 ÷ -1.4 (1600mm), piena larghezza */
+const BX2=-1.40;
+const WC_X=-2.40, WC_Z=+0.55;
+const LAV_X=-1.85, LAV_Z=-0.65;
+const DOC_X=-2.60, DOC_Z=-0.30;  /* doccia */
+const DOOR_Z=-0.30;
+
+/* ============================================================  GRIGLIA + BASAMENTO */
+const g2=new THREE.GridHelper(22,22,0xcccccc,0xe2e2e2);
+g2.position.y=-0.001; scene.add(g2);
+reg(grp(at(mk(bx(SL+1.0,0.10,SW+1.0),mGnd),0,0,0)),
+  'struttura','Platea calcestruzzo armato','L:7000 · W:3500 · Sp:200 mm · C25/30')
+  .position.set(0,-0.05,0);
+
+/* ============================================================  STRUTTURA (quasi trasparente) */
+function addWall(nm,w,h,d,x,y,z,mat){
+  return reg(grp(at(mk(bx(w,h,d),mat||mWall),0,0,0)),'struttura',nm,
+    `L:${(w*1000).toFixed(0)}·H:${(h*1000).toFixed(0)}·Sp:80 mm\nPannello sandwich RAL 1019`)
+    .position.set(x,y,z);
+}
+const DW=0.90,DH=2.10,SW2=(SL-DW)/2;
+addWall('Parete frontale sx', SW2,SH,WT, -(DW/2+SW2/2),SH/2,-SW/2);
+addWall('Parete frontale dx', SW2,SH,WT,  (DW/2+SW2/2),SH/2,-SW/2);
+addWall('Sopra porta principale',DW,SH-DH,WT, 0,DH+(SH-DH)/2,-SW/2);
+addWall('Parete posteriore',SL,SH,WT, 0,SH/2,SW/2);
+addWall('Parete lat. sinistra',WT,SH,SW, -SL/2,SH/2,0);
+addWall('Parete lat. destra',  WT,SH,SW,  SL/2,SH/2,0);
+/* Copertura */
+reg(grp(at(mk(bx(SL,0.082,SW),mRoof),0,0,0)),
+  'struttura','Copertura','82 mm pannello sandwich')
+  .position.set(0,SH+0.041,0);
+/* Divisoria bagno */
+const BDOOR_W=0.80,BDOOR_H=2.05;
+const seg=(SW-BDOOR_W)/2-0.05;
+addWall('Parete divisoria bagno dx',WT,SH,seg, BX2,SH/2, -(SW/2-seg/2-0.05),mPart);
+addWall('Parete divisoria bagno sx',WT,SH,seg, BX2,SH/2,  (SW/2-seg/2-0.05),mPart);
+addWall('Sopra porta bagno',WT,SH-BDOOR_H,BDOOR_W, BX2,BDOOR_H+(SH-BDOOR_H)/2,DOOR_Z,mPart);
+
+/* ============================================================  PAVIMENTO GALLEGGIANTE */
+/* Piedistalli regolabili Ø50mm H=130mm ogni 600mm */
+[-2.7,-2.1,-1.6,-0.8,0.0,0.8,1.6,2.4].forEach(px=>
+  [-0.9,0.0,0.9].forEach(pz=>{
+    reg(grp(at(mk(bx(0.055,0.130,0.055),mPed),0,0,0)),
+      'pavimento','Piedistallo regolabile pavimento',
+      'H:130 mm · Base 55×55 mm · Acciaio zincato\nRegolazione ±30 mm')
+      .position.set(px,0.065,pz);
+  })
+);
+/* Pannelli pavimento zona principale */
+reg(grp(at(mk(bx(4.58,0.022,SW-0.02),mFloor),0,0,0)),
+  'pavimento','Pannello pav. galleggiante (zona servizi)',
+  'L:4580·W:2480 mm · Sp:22 mm\nMultistrato fenolico antiscivolo · Portata 5 kN/m²')
+  .position.set(0.70,RFL-0.011,0);
+/* Zona bagno parziale (lascia visibile l'angolo WC) */
+reg(grp(at(mk(bx(1.58,0.022,1.10),mFloor),0,0,0)),
+  'pavimento','Pannello pav. galleggiante (bagno)',
+  'L:1580·W:1100 mm · Sp:22 mm · multistrato fenolico')
+  .position.set(-2.20,RFL-0.011,-0.65);
+
+/* ============================================================  IMPIANTO IDRICO */
+const IDR=new THREE.Group();
+
+function tuba(x1,y1,z1,x2,y2,z2,r,mat,nm,di){
+  const t=tube(x1,y1,z1,x2,y2,z2,r,mat);
+  t.userData.name=nm; t.userData.dims=di;
+  IDR.add(t); pickable.push(t); return t;
+}
+function racc(x,y,z,r,mat,nm,di){
+  const t=raccord(x,y,z,r,mat);
+  t.userData.name=nm||'Raccordo'; t.userData.dims=di||'';
+  IDR.add(t); pickable.push(t); return t;
+}
+
+const RAF=0.016, RAC=0.016, RSCR=0.028;
+
+/* ── ACQUA FREDDA AF ── */
+tuba(SL/2-WT,0.40,-0.90, SL/2-WT,YPIPE,-0.90, RAF,mAF,'Colonna AF ingresso da rete',
+  'Ø 20 mm PP-R PN10 · BLU\nIngresso da rete idrica esterna\nPressione max 6 bar\nValvola d\'arresto generale');
+racc(SL/2-WT,YPIPE,-0.90, RAF,mRaccF,'Raccordo T AF principale','Ø20 PP-R');
+tuba(SL/2-WT,YPIPE,-0.90, BX2-0.10,YPIPE,-0.90, RAF,mAF,'Collettore AF principale (sotto pavimento)',
+  'Ø 20 mm PP-R PN10\nL: ~4600 mm sotto pavimento galleggiante\nColore: BLU · Isolamento: rivestimento espanso');
+/* Derivazione AF → WC cassetta */
+racc(WC_X,YPIPE,-0.90, RAF,mRaccF,'Raccordo T AF → WC','T Ø20 PP-R');
+tuba(WC_X,YPIPE,-0.90, WC_X,YPIPE,WC_Z-0.10, RAF,mAF,'Derivazione AF → cassetta WC','Ø 20 mm PP-R');
+tuba(WC_X,YPIPE,WC_Z-0.10, WC_X,RFL+0.06,WC_Z-0.10, RAF,mAF,'Risalita AF → cassetta WC','Ø 20 mm PP-R\nAttacco cassetta a zaino');
+/* Derivazione AF → Lavabo */
+racc(LAV_X,YPIPE,-0.90, RAF,mRaccF,'Raccordo T AF → Lavabo','T Ø20 PP-R');
+tuba(LAV_X,YPIPE,-0.90, LAV_X,YPIPE,LAV_Z, RAF,mAF,'Derivazione AF → Lavabo','Ø 20 mm PP-R');
+tuba(LAV_X,YPIPE,LAV_Z, LAV_X,RFL+0.55,LAV_Z, RAF,mAF,'Risalita AF Lavabo','Ø 20 mm → attacco rubinetteria');
+/* Derivazione AF → Doccia */
+racc(-2.60,YPIPE,-0.90, RAF,mRaccF,'Raccordo T AF → Doccia','T Ø20 PP-R');
+tuba(-2.60,YPIPE,-0.90, DOC_X,YPIPE,DOC_Z, RAF,mAF,'Derivazione AF → Doccia','Ø 20 mm PP-R');
+tuba(DOC_X,YPIPE,DOC_Z, DOC_X,RFL+1.80,DOC_Z, RAF,mAF,'Risalita AF Doccia → soffione','Ø 20 mm PP-R');
+
+/* ── ACQUA CALDA AC (boiler elettrico) ── */
+tuba(BX2-0.10,RFL+1.00,-0.75, LAV_X,YPIPE,-0.80, RAC,mAC,'Tubo AC boiler → collettore','Ø 20 mm PP-R PN10 · ROSSO\nIsolamento: rivestimento espanso');
+tuba(LAV_X,YPIPE,-0.80, LAV_X,YPIPE,LAV_Z+0.02, RAC,mAC,'Derivazione AC → Lavabo','Ø 20 mm PP-R');
+tuba(LAV_X,YPIPE,LAV_Z+0.02, LAV_X,RFL+0.55,LAV_Z+0.02, RAC,mAC,'Risalita AC Lavabo','Ø 20 mm → attacco rubinetteria');
+tuba(-2.60,YPIPE,-0.80, DOC_X,YPIPE,DOC_Z+0.03, RAC,mAC,'Derivazione AC → Doccia','Ø 20 mm PP-R');
+tuba(DOC_X,YPIPE,DOC_Z+0.03, DOC_X,RFL+1.80,DOC_Z+0.03, RAC,mAC,'Risalita AC Doccia','Ø 20 mm PP-R');
+
+/* ── SCARICO ── */
+tuba(WC_X,RFL-0.01,WC_Z, WC_X,-0.025,WC_Z, RSCR*1.8,mScar,'Scarico WC (discesa) Ø110','PVC grigio Ø110 mm · pendenza 2%');
+racc(WC_X,-0.025,WC_Z, RSCR*1.8,mScar,'Raccordo scarico WC','90° Ø110 PVC');
+tuba(WC_X,-0.025,WC_Z, SL/2-WT,-0.025,WC_Z, RSCR*1.8,mScar,'Collettore scarico Ø110','PVC grigio Ø110 mm · pendenza 2%\nUscita a parete destra verso pozzetto');
+tuba(LAV_X,RFL+0.10,LAV_Z, LAV_X,-0.015,LAV_Z, RSCR,mScar,'Scarico lavabo Ø40','PVC bianco Ø40 mm\nSifone bottiglietta sotto lavabo');
+tuba(LAV_X,-0.015,LAV_Z, WC_X,-0.015,LAV_Z, RSCR,mScar,'Collettore scarico lavabo → WC','Ø40 mm PVC · pendenza 2%');
+tuba(DOC_X,-0.01,DOC_Z, DOC_X,-0.015,DOC_Z-0.3, RSCR,mScar,'Scarico doccia Ø50','Ø50 mm · sifone piatto sifonato');
+
+LYR['idrico'].push(IDR); scene.add(IDR);
+
+/* ============================================================  IMPIANTO ELETTRICO */
+const EL=new THREE.Group();
+
+function cond(x1,y1,z1,x2,y2,z2,s,mat,nm,di){
+  const dx=x2-x1,dy=y2-y1,dz=z2-z1;
+  const len=Math.sqrt(dx*dx+dy*dy+dz*dz);
+  const m=mk(bx(s,s,len),mat);
+  m.position.set((x1+x2)/2,(y1+y2)/2,(z1+z2)/2);
+  m.quaternion.setFromUnitVectors(
+    new THREE.Vector3(0,0,1),
+    new THREE.Vector3(dx,dy,dz).normalize());
+  m.userData.name=nm; m.userData.dims=di;
+  EL.add(m); pickable.push(m); return m;
+}
+
+/* ── QUADRO ELETTRICO DI ZONA (QZ) ── */
+/* Corpo principale */
+const qeBody=mk(bx(0.65,0.90,0.16),mQE_bod);
+/* Sportello metallico */
+const qeDoor=at(mk(bx(0.63,0.88,0.010),mQE_dor),0,0,0.082);
+/* Frontale interno schermi/bornie */
+const qeScr=at(mk(bx(0.45,0.60,0.005),mQE_scr),0,0.03,0.075);
+/* Maniglia */
+const qeHnd=mk(bx(0.025,0.12,0.020),new THREE.MeshPhongMaterial({color:0xCCCCCC}));
+qeHnd.position.set(0.28,0,0.088);
+/* Targhetta */
+const qeTag=mk(bx(0.18,0.06,0.003),new THREE.MeshPhongMaterial({color:0xFFFFEE}));
+qeTag.position.set(-0.10,0.36,0.082);
+/* Lampada segnalazione */
+const qeLed=mk(sp(0.015),new THREE.MeshPhongMaterial({color:0x00FF44,emissive:0x004400,emissiveIntensity:0.8}));
+qeLed.position.set(-0.22,0.36,0.082);
+const QE=grp(qeBody,qeDoor,qeScr,qeHnd,qeTag,qeLed);
+QE.position.set(1.80,RFL+1.10,-SW/2+WT+0.10);
+QE.userData.name='Quadro elettrico di zona (QZ)';
+QE.userData.dims=
+`Dim: 650×900×160 mm · IP65 · IK10
+Interruttore generale: 40A 4P+N
+MCB C10/1P — Luce bagno
+MCB C10/1P — Luce locale (2 circuiti)
+MCB C16/1P — Boiler 1500W
+MCB C16/1P — Prese Schuko 16A
+MCB C32/1P — Presa forza 32A
+Differenziale 25A/30mA tipo A
+Barra PE + N separata
+Alimentazione: 230/400V 50Hz`;
+EL.add(QE); pickable.push(QE);
+
+/* Interruttori differenziali e MCB (visibili sul frontale) */
+[-0.22,-0.12,-0.02,0.08,0.18].forEach((dx,i)=>{
+  const cb=at(mk(bx(0.040,0.070,0.010),new THREE.MeshPhongMaterial({color:i<2?0x333333:0x555555})),
+    1.80+dx, RFL+1.05, -SW/2+WT+0.158);
+  cb.userData.name='MCB Interruttore automatico';
+  cb.userData.dims=['MCB 40A 4P diff.','MCB C10/1P luce','MCB C16/1P prese','MCB C32/1P forza','MCB C16/1P boiler'][i];
+  EL.add(cb); pickable.push(cb);
+});
+
+/* Cavo alimentazione principale (dal basso/esterno) */
+cond(1.80,0,  -SW/2+0.25, 1.80,RFL+0.28,-SW/2+0.25, 0.042,mCond,
+  'Cavo alimentazione principale','FG7OR 4G16mm² + PE 16mm²\nDal punto di consegna esterno\nTubazione interrata Ø63 PVC');
+
+/* Canale portacavi principale sotto pavimento (asse X) */
+cond(-SL/2+0.3,YDUCT,-SW/2+0.28, SL/2-0.3,YDUCT,-SW/2+0.28, 0.045,mCond,
+  'Canale portacavi principale (sotto pavimento)',
+  'Sezione 50×50 mm PVC grigio\nUnder pavimento galleggiante H=100mm\nContenuto: cavi luce + prese + forza');
+
+/* Dorsale verticale luce bagno */
+cond(BX2+0.08,YDUCT,-SW/2+0.28, BX2+0.08,SH-0.28,-SW/2+0.28, 0.028,mLuce,
+  'Dorsale verticale circuito luce bagno',
+  'Tubo corrugato Ø20 mm a parete\nCavo FG16OR16 3×1.5mm² · Circuito C1-Luce bagno');
+
+/* Circuito luce bagno al soffitto */
+cond(BX2+0.08,SH-0.28,-SW/2+0.28, WC_X,SH-0.28,0, 0.024,mLuce,
+  'Circuito luce bagno (a soffitto)',
+  'Tubo corrugato Ø16 mm\nCavo 3×1.5mm² · Circuito C1');
+
+/* Plafoniera LED bagno */
+const plaf=grp(
+  at(mk(bx(0.32,0.052,0.22),mLamp2),0,0,0),
+  at(mk(bx(0.34,0.025,0.24),new THREE.MeshPhongMaterial({color:0xBBBBBB})),0,-0.038,0));
+plaf.position.set(WC_X,SH-0.028,0);
+plaf.userData.name='Plafoniera LED IP65 bagno';
+plaf.userData.dims='18W · IP65 · 1800lm · 4000K · 320×220mm\nIK08 · Classe I · 230Vac';
+EL.add(plaf); pickable.push(plaf);
+
+/* Lampada specchio sopra lavabo */
+const lspec=grp(
+  at(mk(bx(0.50,0.058,0.072),mLamp2),0,0,0),
+  at(mk(bx(0.52,0.022,0.076),new THREE.MeshPhongMaterial({color:0xBBBBBB})),0,-0.040,0));
+lspec.position.set(LAV_X,RFL+1.68,LAV_Z-0.038);
+lspec.userData.name='Lampada specchio LED IP44';
+lspec.userData.dims='12W · IP44 · 1200lm\nL:500×H:58×P:72 mm\nCCT 2700–4000K regolabile\nAttacco diretto a parete';
+EL.add(lspec); pickable.push(lspec);
+
+cond(BX2+0.08,SH-0.28,-SW/2+0.28, LAV_X,RFL+1.70,LAV_Z-0.04, 0.018,mLuce,
+  'Cavo lampada specchio','Tubo corrugato Ø16 a parete\nCavo 3×1.5mm²');
+
+/* Circuito luce locale principale */
+cond(1.80,RFL+1.80,-SW/2+0.22, -1.0,RFL+1.80,-SW/2+0.22, 0.028,mLuce,
+  'Circuito luce locale principale',
+  'Tubo corrugato Ø20 a parete H=2300mm\nCavo FG16OR16 3×1.5mm² · Circuito C2-Luce');
+
+/* Lampade LED IP65 (4 pz) locale principale */
+[[-2.0,0.0],[0.0,0.0],[1.4,-0.5],[2.5,0.5]].forEach(([lx,lz],i)=>{
+  const lm=grp(
+    at(mk(bx(0.30,0.055,0.10),mLamp2),0,0,0),
+    at(mk(bx(0.32,0.022,0.105),new THREE.MeshPhongMaterial({color:0xBBBBBB})),0,-0.038,0));
+  lm.position.set(lx,SH-0.032,lz);
+  lm.userData.name=`Lampada LED IP65 n.${i+1}/4 (locale)`;
+  lm.userData.dims='36W · IP65 · 3600lm · 4000K\n290×55×100 mm · IK08 · Circuito C2';
+  EL.add(lm); pickable.push(lm);
+});
+
+/* Prese Schuko 16A (4 pz) */
+[[-0.5,-SW/2+WT+0.03],[0.5,-SW/2+WT+0.03],[1.5,SW/2-WT-0.03],[-1.5,SW/2-WT-0.03]].forEach(([sx,sz],i)=>{
+  const sk=at(mk(bx(0.086,0.086,0.044),new THREE.MeshPhongMaterial({color:0xEEEEDD})),sx,RFL+0.30,sz);
+  sk.userData.name=`Presa Schuko 16A n.${i+1}`;
+  sk.userData.dims='2P+T 16A · IP55\nH:300mm da pav. · Circuito F1-Prese';
+  EL.add(sk); pickable.push(sk);
+});
+
+/* Presa forza 32A (CEE) */
+const pf=at(mk(bx(0.125,0.125,0.065),new THREE.MeshPhongMaterial({color:0xCC3300})),2.0,RFL+0.36,-SW/2+WT+0.045);
+pf.userData.name='Presa forza 32A CEE (3P+N+PE)';
+pf.userData.dims='CEE 32A · 3P+N+PE · IP67\nH:360mm · Circuito F2-Forza';
+EL.add(pf); pickable.push(pf);
+
+/* Interruttori luce a parete */
+[[BX2+WT+0.022,DOOR_Z+0.35,'Interruttore luce bagno','10A 2P · IP44 · H:1100mm'],
+ [-1.0,-SW/2+WT+0.022,'Interruttore luce locale','10A 2P + dimmer · H:1100mm'],
+ [2.2,-SW/2+WT+0.022,'Interruttore + dimmer luce','10A + dimmer rotativo · H:1100mm']
+].forEach(([sx,sz,nm,di])=>{
+  const sw=at(mk(bx(0.072,0.072,0.028),new THREE.MeshPhongMaterial({color:0xF2F0EC})),sx,RFL+1.10,sz);
+  sw.userData.name=nm; sw.userData.dims=di;
+  EL.add(sw); pickable.push(sw);
+});
+
+/* Presa dati RJ45 + USB */
+const rd=at(mk(bx(0.086,0.086,0.044),new THREE.MeshPhongMaterial({color:0xDDEEFF})),0.8,RFL+0.30,-SW/2+WT+0.03);
+rd.userData.name='Presa dati RJ45 Cat.6 + USB-A/C';
+rd.userData.dims='RJ45 Cat.6 UTP · USB-A 5W · USB-C 20W\nH:300mm · Cat. strutturata';
+EL.add(rd); pickable.push(rd);
+
+LYR['elettrico'].push(EL); scene.add(EL);
+
+/* ============================================================  SANITARI */
+/* ── BOILER ELETTRICO ── */
+const boilerG=grp(
+  at(mk(bx(0.50,0.58,0.30),mBoiler),0,0,0),
+  at(mk(bx(0.48,0.56,0.005),new THREE.MeshPhongMaterial({color:0xEEEEEE})),0,0,0.153),
+  at(mk(bx(0.12,0.08,0.04),new THREE.MeshPhongMaterial({color:0xCCCCCC})),0,0.22,0.160),
+  at(mk(cy(0.018,0.10),new THREE.MeshPhongMaterial({color:0x888888})),0,-0.30,0)));
+reg(boilerG,'sanitari','Scalda-acqua elettrico (boiler)',
+  `Capacità: 50 L
+Potenza: 1500 W · 230 Vac
+Dim: 500×580×300 mm · orizzontale
+Classe energetica: A
+Protezione antilegionella T>65°C
+Attacchi: AF Ø15 + AC Ø15`)
+  .position.set(BX2-0.30,RFL+1.00,-0.75);
+
+/* ── PORTA BAGNO ── */
+const portaG=grp(
+  at(mk(bx(0.80,2.05,0.040),new THREE.MeshPhongMaterial({color:0xF0EEE8})),0,0,0),
+  at(mk(bx(0.78,2.03,0.004),new THREE.MeshPhongMaterial({color:0xDDDDCC})),0,0,0.022),
+  at(mk(bx(0.022,0.12,0.022),mInox),0.36,0,0.032));
+reg(portaG,'sanitari','Porta bagno',
+  `L:800 · H:2050 · Sp:40 mm
+Tipo: a battente interna
+Materiale: tamburata laminato
+Colore: bianco lucido
+Cerniere: 3 pz inox Ø14`)
+  .position.set(BX2,RFL+2.05/2,DOOR_Z);
+
+/* ── WC SOSPESO + CASSETTA A ZAINO ── */
+const wcG=new THREE.Group();
+/* Cassetta a zaino (nascosta nella parete) */
+wcG.add(at(mk(bx(0.380,0.330,0.115),new THREE.MeshPhongMaterial({color:0xEEEEEE,transparent:true,opacity:0.6})),0,0.165+0.115,0.005));
+/* Corpo WC ceramica */
+wcG.add(at(mk(bx(0.370,0.360,0.550),mCer),0,0.180,-0.025));
+/* Piatto seduta */
+wcG.add(at(mk(bx(0.360,0.020,0.460),mCer),0,0.365,0.005));
+/* Coperchio */
+wcG.add(at(mk(bx(0.355,0.018,0.440),new THREE.MeshPhongMaterial({color:0xF0F0EC})),0,0.385,0.005));
+/* Tasto scarico */
+wcG.add(at(mk(bx(0.12,0.025,0.065),new THREE.MeshPhongMaterial({color:0xCCCCCC,shininess:100})),0,0.355,-0.055));
+/* Fissaggi a muro */
+[-0.15,0.15].forEach(dx=>wcG.add(at(mk(bx(0.010,0.010,0.140),mInox),dx,-0.100,-0.250)));
+reg(wcG,'sanitari','WC sospeso con cassetta incassata',
+  `Dim seduta: 370×550 mm · H:485mm
+Cassetta a zaino: 380×330×115 mm
+Ceramica sanitaria bianca
+Scarico: pavimento Ø110 mm
+Alimentazione AF: Ø15 mm
+Distanza muro-bordo: 360 mm
+Marchio CE – UNI EN 997`)
+  .position.set(WC_X,RFL,WC_Z);
+
+/* ── LAVABO SU COLONNA ── */
+const lavG=new THREE.Group();
+/* Bacinella */
+lavG.add(at(mk(bx(0.500,0.155,0.380),mCer),0,0.0775,0));
+/* Bordo smussato */
+lavG.add(at(mk(bx(0.510,0.020,0.390),new THREE.MeshPhongMaterial({color:0xF5F5F0})),0,0.157,0));
+/* Colonna */
+lavG.add(at(mk(bx(0.145,0.520,0.200),mCer),0,-0.260,0.055));
+/* Rubinetteria monocomando */
+lavG.add(at(mk(bx(0.040,0.110,0.040),mInox),0,0.170,0));
+lavG.add(at(mk(bx(0.010,0.055,0.065),mInox),0,0.250,-0.002));
+/* Sifone visibile */
+lavG.add(at(mk(cy(0.022,0.080,8),new THREE.MeshPhongMaterial({color:0xCCCCCC})),0,-0.010,0.060));
+reg(lavG,'sanitari','Lavabo su colonna in ceramica',
+  `L:500 · P:380 · H bacinella:155 mm
+H colonna: 520 mm
+Ceramica sanitaria bianca
+Rubinetteria: monocomando miscelatore
+Scarico: piletta clic-clac Ø40 + sifone
+Attacchi: AF Ø15 + AC Ø15
+Marchio CE – UNI EN 31`)
+  .position.set(LAV_X,RFL,LAV_Z);
+
+/* ── SPECCHIO CON CORNICE ── */
+const mirG=grp(
+  at(mk(bx(0.600,0.800,0.014),mVetro),0,0,0),
+  at(mk(bx(0.620,0.820,0.010),new THREE.MeshPhongMaterial({color:0xA0AAAA,shininess:100})),0,0,-0.012));
+reg(mirG,'sanitari','Specchio bagno retro-illuminato',
+  `L:600 · H:800 · Sp:14 mm
+Cornice: alluminio anodizzato
+Retro-illuminazione LED 3000K
+IP44 · Classe II`)
+  .position.set(LAV_X,RFL+1.25,LAV_Z-0.012);
+
+/* ── BOX DOCCIA ── */
+const docG=new THREE.Group();
+docG.add(at(mk(bx(0.80,0.025,0.80),new THREE.MeshPhongMaterial({color:0xE8E8E0})),0,0.0125,0)); /* piatto */
+docG.add(at(mk(bx(0.006,1.00,0.80),mVetro), 0.40,0.51,0));   /* vetro dx */
+docG.add(at(mk(bx(0.80,1.00,0.006),mVetro), 0,0.51,-0.40));  /* vetro front */
+docG.add(at(mk(cy(0.130,0.018,16),new THREE.MeshPhongMaterial({color:0xA0AAAA})),0,1.02,0)); /* soffione */
+docG.add(at(mk(cy(0.010,0.35,8),mInox),-0.32,0.60,-0.38)); /* maniglione */
+reg(docG,'sanitari','Box doccia 80×80 cm',
+  `L:800 · P:800 · H:1000 mm
+Piatto: ceramica antiscivolo 800×800
+Vetro: temperato 8mm trasparente
+Soffione: quadro 260×260 mm cromato
+AC+AF · Scarico Ø50 mm`)
+  .position.set(DOC_X,RFL,DOC_Z);
+
+/* ── PORTASCIUGAMANI + ACCESSORI ── */
+[
+  {p:[BX2-0.08,RFL+0.92,-SW/2+WT+0.05], nm:'Portasciugamani da parete', di:'L:500mm · Inox AISI304\nFissaggio 2 tasselli'},
+  {p:[WC_X+0.28,RFL+0.65,-SW/2+WT+0.08], nm:'Portarotolo carta igienica', di:'Ø130 · Inox AISI304'},
+].forEach(({p,nm,di})=>{
+  const acc=at(mk(bx(0.50,0.022,0.022),mInox),p[0],p[1],p[2]);
+  acc.userData.name=nm; acc.userData.dims=di;
+  LYR['sanitari'].push(acc); scene.add(acc); pickable.push(acc);
+});
+
+/* ============================================================  VISTE PRESET */
+function sv(v){
+  document.querySelectorAll('#controls button').forEach(b=>b.classList.remove('active'));
+  switch(v){
+    case 'iso':
+      camera.position.set(-6,5,-8); orb.target.set(-2,1.2,0); break;
+    case 'pianta':
+      camera.position.set(0,10,0); orb.target.set(0,0,0); break;
+    case 'bagno':
+      camera.position.set(-3.5,2.0,-2.5); orb.target.set(-2.2,1.2,0.2); break;
+    case 'qe':
+      camera.position.set(3.5,2.0,-3.5); orb.target.set(1.8,1.5,-1.0); break;
+    case 'pipe':
+      camera.position.set(0,0.4,6); orb.target.set(0,0,0); break;
+    case 'front':
+      camera.position.set(0,2,-12); orb.target.set(0,1.3,0); break;
+  }
+  camera.lookAt(orb.target); orb.update();
+  const b=document.getElementById('b-'+v);
+  if(b) b.classList.add('active');
+}
+
+/* ============================================================  RAYCASTING */
+const ray=new THREE.Raycaster();
+const mv=new THREE.Vector2();
+let _dn={x:0,y:0},_drag=false;
+canvas.addEventListener('mousedown',e=>{_dn={x:e.clientX,y:e.clientY};_drag=false;});
+canvas.addEventListener('mousemove',e=>{if(Math.abs(e.clientX-_dn.x)>4||Math.abs(e.clientY-_dn.y)>4)_drag=true;});
+canvas.addEventListener('mouseup',e=>{
+  if(_drag)return;
+  mv.set((e.clientX/window.innerWidth)*2-1,-(e.clientY/window.innerHeight)*2+1);
+  ray.setFromCamera(mv,camera);
+  const hits=ray.intersectObjects(pickable,true);
+  let found=null;
+  for(const h of hits){
+    let o=h.object;
+    while(o&&!o.userData.name)o=o.parent;
+    if(o&&o.userData.name){found=o;break;}
+  }
+  const pan=document.getElementById('info-panel');
+  if(found){
+    document.getElementById('pname').textContent=found.userData.name;
+    document.getElementById('pdims').textContent=found.userData.dims;
+    pan.classList.remove('hidden');
+  } else pan.classList.add('hidden');
+});
+
+/* ============================================================  RESIZE / RENDER */
+window.addEventListener('resize',()=>{
+  camera.aspect=window.innerWidth/window.innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(window.innerWidth,window.innerHeight);
+});
+setTimeout(()=>document.getElementById('hint').style.opacity='0',5000);
+(function animate(){
+  requestAnimationFrame(animate);
+  orb.update();
+  renderer.render(scene,camera);
+})();
+</script>
+</body>
+</html>
