@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="it">
 <head>
 <meta charset="UTF-8">
@@ -60,6 +60,10 @@ body { background:#fff; font-family:'Segoe UI',Arial,sans-serif; overflow:hidden
 #layers button[data-l="idrico"].on    { background:#1166DD; border-color:#1166DD; }
 #layers button[data-l="elettrico"].on { background:#EE7700; border-color:#EE7700; }
 #layers button[data-l="sanitari"].on  { background:#338844; border-color:#338844; }
+#layers button[data-l="hvac"].on      { background:#22AAAA; border-color:#22AAAA; }
+#layers button[data-l="antinc"].on    { background:#CC2222; border-color:#CC2222; }
+#layers button[data-l="illumin"].on   { background:#DDCC00; border-color:#DDCC00; }
+#layers button[data-l="arredi"].on    { background:#8B6914; border-color:#8B6914; }
 #layers button[data-l="xray"].on      { background:#AA2266; border-color:#AA2266; }
 
 /* view buttons */
@@ -107,14 +111,19 @@ body { background:#fff; font-family:'Segoe UI',Arial,sans-serif; overflow:hidden
   <button data-l="struttura" class="on" onclick="tglLayer(this)">Struttura</button>
   <button data-l="scala"     class="on" onclick="tglLayer(this)">Scala</button>
   <button data-l="tetto"     class="on" onclick="tglLayer(this)">Tetto+Balaustra</button>
-  <button data-l="accessori" class="on" onclick="tglLayer(this)">Sensori+Lampade</button>
+  <button data-l="accessori" class="on" onclick="tglLayer(this)">Sensori</button>
   <button data-l="bbq"       class="on" onclick="tglLayer(this)">BBQ</button>
   <button data-l="pavimento" class="on" onclick="tglLayer(this)">Pav.Galleggiante</button>
   <button data-l="idrico"    class="on" onclick="tglLayer(this)">Impianto Idrico</button>
   <button data-l="elettrico" class="on" onclick="tglLayer(this)">Impianto Elettrico</button>
   <button data-l="sanitari"  class="on" onclick="tglLayer(this)">Sanitari</button>
+  <button data-l="hvac"      class="on" onclick="tglLayer(this)">HVAC</button>
+  <button data-l="antinc"    class="on" onclick="tglLayer(this)">Antincendio</button>
+  <button data-l="illumin"   class="on" onclick="tglLayer(this)">Illuminazione</button>
+  <button data-l="arredi"    class="on" onclick="tglLayer(this)">Arredi</button>
   <button data-l="xray"          id="btn-xray"  onclick="toggleXray()">X-Ray pareti</button>
   <button                         id="btn-wire"  onclick="toggleWire()">Wireframe</button>
+  <button                                        onclick="showFascicolo()" style="background:#1a3a6b;color:#fff;border-color:#1a3a6b">&#128203; Fascicolo</button>
 </div>
 
 <div id="info-panel" class="hidden">
@@ -132,6 +141,11 @@ body { background:#fff; font-family:'Segoe UI',Arial,sans-serif; overflow:hidden
   <button onclick="sv('bagno')"  id="b-bagno">Bagno</button>
   <button onclick="sv('qe')"     id="b-qe">Quadro Elett.</button>
   <button onclick="sv('pipe')"   id="b-pipe">Tubazioni</button>
+  <button onclick="sv('int_f')"   id="b-int_f">&#128065; Int. Fronte</button>
+  <button onclick="sv('int_q')"   id="b-int_q">&#128065; Int. QP/HVAC</button>
+  <button onclick="sv('int_lav')" id="b-int_lav">&#128065; Int. Lavabo</button>
+  <button onclick="sv('int_tv')"  id="b-int_tv">&#128065; Int. Samsung</button>
+  <button onclick="toggleQuote()" id="btn-quote">&#128207; Quote</button>
 </div>
 
 <div id="legend">
@@ -143,9 +157,89 @@ body { background:#fff; font-family:'Segoe UI',Arial,sans-serif; overflow:hidden
   <div><span class="dot" style="background:#FFDD00"></span>Circuiti luce</div>
   <div><span class="dot" style="background:#338844"></span>Sanitari ceramica</div>
   <div><span class="dot" style="background:#FF4422"></span>Dräger Polytron 5200</div>
+  <div><span class="dot" style="background:#22AAAA"></span>HVAC split AUX</div>
+  <div><span class="dot" style="background:#CC2222"></span>Antincendio</div>
+  <div><span class="dot" style="background:#DDCC00"></span>Illuminazione LED</div>
 </div>
 
 <div id="hint">Clicca elemento per scheda tecnica · Trascina per ruotare · Scroll zoom</div>
+
+<!-- FASCICOLO TECNICO -->
+<div id="fascicolo" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:#f0f2f6;overflow-y:auto;z-index:200;font-family:'Segoe UI',Arial,sans-serif;">
+<div style="max-width:960px;margin:0 auto;padding:20px 18px 60px;">
+  <div style="display:flex;align-items:center;margin-bottom:18px;">
+    <div style="flex:1">
+      <div style="font-size:22px;font-weight:700;color:#1a2a4a">SHELTER 20ft — Fascicolo Tecnico</div>
+      <div style="font-size:12px;color:#6a7a8a;margin-top:3px">6000×2500×2591 mm · Fascia −5/+50°C · Comoli Ferrari</div>
+    </div>
+    <button onclick="showFascicolo(false)" style="padding:8px 18px;background:#1a3a6b;color:#fff;border:none;border-radius:8px;cursor:pointer;font-size:13px;font-weight:600">← Torna al 3D</button>
+  </div>
+
+  <!-- TAB STRUTTURA -->
+  <div style="background:#fff;border-radius:10px;border:1px solid #d8e0ec;margin-bottom:14px;overflow:hidden">
+    <div style="background:#f0f4fa;padding:11px 16px;font-size:14px;font-weight:700;color:#1a2a4a;border-bottom:1px solid #d8e0ec">&#127963; Struttura & Dimensioni</div>
+    <div style="padding:14px 16px">
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:14px">
+        <div style="background:#e8f0fb;border-radius:8px;padding:10px;border:1px solid #b0c8f0"><div style="font-size:10px;color:#3a6aaa;font-weight:700;text-transform:uppercase">Lunghezza</div><div style="font-size:22px;font-weight:700;color:#1a2a4a">6000<span style="font-size:12px;color:#888;font-weight:400"> mm</span></div></div>
+        <div style="background:#e8f0fb;border-radius:8px;padding:10px;border:1px solid #b0c8f0"><div style="font-size:10px;color:#3a6aaa;font-weight:700;text-transform:uppercase">Larghezza</div><div style="font-size:22px;font-weight:700;color:#1a2a4a">2500<span style="font-size:12px;color:#888;font-weight:400"> mm</span></div></div>
+        <div style="background:#e8f0fb;border-radius:8px;padding:10px;border:1px solid #b0c8f0"><div style="font-size:10px;color:#3a6aaa;font-weight:700;text-transform:uppercase">Altezza</div><div style="font-size:22px;font-weight:700;color:#1a2a4a">2591<span style="font-size:12px;color:#888;font-weight:400"> mm</span></div></div>
+        <div style="background:#e8f4ec;border-radius:8px;padding:10px;border:1px solid #a0d0b0"><div style="font-size:10px;color:#2a6a3a;font-weight:700;text-transform:uppercase">Fascia termica</div><div style="font-size:22px;font-weight:700;color:#1a2a4a">−5÷+50<span style="font-size:12px;color:#888;font-weight:400"> °C</span></div></div>
+      </div>
+      <table style="width:100%;border-collapse:collapse;font-size:12px">
+        <tr style="background:#f8fafc"><th style="text-align:left;padding:6px 8px;border-bottom:2px solid #d8e0ec;font-size:10px;font-weight:700;color:#6a7a8a">COMPONENTE</th><th style="text-align:left;padding:6px 8px;border-bottom:2px solid #d8e0ec;font-size:10px;font-weight:700;color:#6a7a8a">SPECIFICHE</th><th style="text-align:left;padding:6px 8px;border-bottom:2px solid #d8e0ec;font-size:10px;font-weight:700;color:#6a7a8a">NORMA/MARCA</th></tr>
+        <tr><td style="padding:5px 8px;border-bottom:1px solid #edf0f5;color:#1a2a3a;font-weight:600">Struttura portante</td><td style="padding:5px 8px;border-bottom:1px solid #edf0f5">Telaio acciaio S275 zincato a caldo, colonne UPN200</td><td style="padding:5px 8px;border-bottom:1px solid #edf0f5;color:#3a6aaa">EN 10025 / ISO 1461</td></tr>
+        <tr style="background:#fafbfc"><td style="padding:5px 8px;border-bottom:1px solid #edf0f5;color:#1a2a3a;font-weight:600">Pareti</td><td style="padding:5px 8px;border-bottom:1px solid #edf0f5">Pannello sandwich poliuretano 80mm, RAL 7035</td><td style="padding:5px 8px;border-bottom:1px solid #edf0f5;color:#3a6aaa">EN 14509</td></tr>
+        <tr><td style="padding:5px 8px;border-bottom:1px solid #edf0f5;color:#1a2a3a;font-weight:600">Copertura</td><td style="padding:5px 8px;border-bottom:1px solid #edf0f5">Pannello sandwich 82mm, calpestabile ≥300 kg/m², balaustra h=1000mm</td><td style="padding:5px 8px;border-bottom:1px solid #edf0f5;color:#3a6aaa">EN 14509</td></tr>
+        <tr style="background:#fafbfc"><td style="padding:5px 8px;border-bottom:1px solid #edf0f5;color:#1a2a3a;font-weight:600">Fronte vetrato</td><td style="padding:5px 8px;border-bottom:1px solid #edf0f5">3000×1800 scorrevole + porta 1500×2100 + pannello cieco — alluminio RPT</td><td style="padding:5px 8px;border-bottom:1px solid #edf0f5;color:#3a6aaa">EN 14351-1</td></tr>
+        <tr><td style="padding:5px 8px;border-bottom:1px solid #edf0f5;color:#1a2a3a;font-weight:600">Vetrocamera</td><td style="padding:5px 8px;border-bottom:1px solid #edf0f5">6+16Ar+6 basso-emissivo · Uw:1.0 W/m²K · Rw:36dB</td><td style="padding:5px 8px;border-bottom:1px solid #edf0f5;color:#3a6aaa">EN 1279</td></tr>
+        <tr style="background:#fafbfc"><td style="padding:5px 8px;color:#1a2a3a;font-weight:600">Scala accesso</td><td style="padding:5px 8px">14 gradini dritti · pedata 270mm · larghezza 1000mm · zincata a caldo</td><td style="padding:5px 8px;color:#3a6aaa">EN ISO 14122</td></tr>
+      </table>
+    </div>
+  </div>
+
+  <!-- TAB IMPIANTI -->
+  <div style="background:#fff;border-radius:10px;border:1px solid #d8e0ec;margin-bottom:14px;overflow:hidden">
+    <div style="background:#f0f4fa;padding:11px 16px;font-size:14px;font-weight:700;color:#1a2a4a;border-bottom:1px solid #d8e0ec">&#9889; Impianti Tecnici</div>
+    <div style="padding:14px 16px">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+        <div>
+          <div style="font-size:10px;font-weight:700;color:#6a7a8a;text-transform:uppercase;border-bottom:1px solid #d8e0ec;padding-bottom:5px;margin-bottom:8px">HVAC</div>
+          <div style="font-size:12px;line-height:2;color:#1a2a3a"><b>Marca:</b> AUX<br><b>Modello:</b> ASTW-H18/4R3H (5.0 kW)<br><b>Riscaldamento:</b> 5.8 kW · COP 4.5<br><b>Raffreddamento:</b> 5.0 kW · EER 3.8<br><b>Fascia op.:</b> −30°C ÷ +50°C<br><b>Fluido:</b> R32 · GWP 675<br><b>Alimentazione:</b> 230V~50Hz · MCB C16/2P</div>
+        </div>
+        <div>
+          <div style="font-size:10px;font-weight:700;color:#6a7a8a;text-transform:uppercase;border-bottom:1px solid #d8e0ec;padding-bottom:5px;margin-bottom:8px">ELETTRICO</div>
+          <div style="font-size:12px;line-height:2;color:#1a2a3a"><b>Quadro:</b> Bticino Pragma TS60 · IP65 · IK10<br><b>Dimensioni:</b> 650×900×140mm<br><b>Interruttore gen.:</b> 40A 4P differenziale<br><b>MCB:</b> 10 interruttori (luce/prese/forza/HVAC)<br><b>Prese Schuko:</b> 5×16A IP55 · 1×CEE32A IP67<br><b>Alimentazione:</b> 230/400V 50Hz TN-S</div>
+        </div>
+        <div>
+          <div style="font-size:10px;font-weight:700;color:#6a7a8a;text-transform:uppercase;border-bottom:1px solid #d8e0ec;padding-bottom:5px;margin-bottom:8px">IDRICO</div>
+          <div style="font-size:12px;line-height:2;color:#1a2a3a"><b>AF:</b> PP-R PN10 Ø20 blu<br><b>AC:</b> PP-R PN10 Ø20 rosso<br><b>Scarico:</b> PVC Ø110 (WC) · Ø50 (doc.) · Ø40 (lav.)<br><b>Scalda-acqua:</b> Ariston Fast Evo 11 kW · A+<br><b>Pressione max:</b> 6 bar · Antilegionella T>65°C</div>
+        </div>
+        <div>
+          <div style="font-size:10px;font-weight:700;color:#6a7a8a;text-transform:uppercase;border-bottom:1px solid #d8e0ec;padding-bottom:5px;margin-bottom:8px">ANTINCENDIO</div>
+          <div style="font-size:12px;line-height:2;color:#1a2a3a"><b>Centrale:</b> Honeywell Galaxy Flex · EN 54-2<br><b>Rilevatori:</b> 3× ottico analogico Hochiki ESP-E<br><b>Pulsante:</b> 1× manuale EN 54-11<br><b>EFC:</b> estrattore 2000 m³/h · C300 · parete SX<br><b>Loop:</b> J-H(St)H FE180 · 2×0.8mm² · 90min</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SANITARI -->
+  <div style="background:#fff;border-radius:10px;border:1px solid #d8e0ec;margin-bottom:14px;overflow:hidden">
+    <div style="background:#f0f4fa;padding:11px 16px;font-size:14px;font-weight:700;color:#1a2a4a;border-bottom:1px solid #d8e0ec">&#127746; Bagno & Sanitari</div>
+    <div style="padding:14px 16px;font-size:12px;line-height:2;color:#1a2a3a;display:grid;grid-template-columns:1fr 1fr;gap:12px">
+      <div><b>WC:</b> sospeso con cassetta zaino · ceramica bianca · scarico Ø110<br><b>Doccia:</b> box 80×80cm · piatto antiscivolo · vetro 8mm · soffione inox<br><b>Lavabo:</b> angolare 420×420mm con mobile a L 650×650mm</div>
+      <div><b>Specchio:</b> 550×700mm retroilluminato IP44<br><b>Scalda-acqua:</b> Ariston Fast Evo 11kW nel mobile angolare<br><b>Zona bagno:</b> 1600×2500mm con porta battente L:800mm</div>
+    </div>
+  </div>
+
+  <!-- ILLUMINAZIONE -->
+  <div style="background:#fff;border-radius:10px;border:1px solid #d8e0ec;margin-bottom:14px;overflow:hidden">
+    <div style="background:#f0f4fa;padding:11px 16px;font-size:14px;font-weight:700;color:#1a2a4a;border-bottom:1px solid #d8e0ec">&#128161; Illuminazione</div>
+    <div style="padding:14px 16px;font-size:12px;line-height:2;color:#1a2a3a">
+      3× Plafoniera LED 36W · IP65 · 3600lm · 4000K · 600×80mm &nbsp;|&nbsp; 1× Emergenza SA autoalimentata 3h · EN 1838 · verde EXIT &nbsp;|&nbsp; Canaline 60×40mm PVC soffitto
+    </div>
+  </div>
+</div>
+</div>
 
 <!-- THREE.JS E ORBITCONTROLS VENGONO INIETTATI QUI -->
 <script>/**
@@ -1249,7 +1343,8 @@ fill.position.set(-6,4,-10); scene.add(fill);
    ────────────────────────────────────────────── */
 const LYR = {
   struttura:[], scala:[], tetto:[], accessori:[], bbq:[],
-  pavimento:[], idrico:[], elettrico:[], sanitari:[]
+  pavimento:[], idrico:[], elettrico:[], sanitari:[],
+  hvac:[], antinc:[], illumin:[], arredi:[]
 };
 const pickable=[];
 const allMats=[];
@@ -1303,7 +1398,7 @@ const mWall  = new THREE.MeshPhongMaterial({color:0xB8A888,side:THREE.DoubleSide
 const mPart  = new THREE.MeshPhongMaterial({color:0xC0C8D0,transparent:true,opacity:0.18,side:THREE.DoubleSide,depthWrite:false});
 const mRoof  = new THREE.MeshPhongMaterial({color:0xA89878});
 const mFloor = new THREE.MeshPhongMaterial({color:0x9A8C7A});
-const mDoor  = new THREE.MeshPhongMaterial({color:0x7A8FAA});
+const mDoor  = new THREE.MeshPhongMaterial({color:0xB8A888,side:THREE.DoubleSide}); // RAL7035 come le pareti
 const mMetal = new THREE.MeshPhongMaterial({color:0x606468});
 const mGrate = new THREE.MeshPhongMaterial({color:0x707880});
 const mRail  = new THREE.MeshPhongMaterial({color:0x505860});
@@ -1365,9 +1460,9 @@ const YPIPE=0.068; // asse tubazioni
 const YDUCT=0.100; // asse cavidotti elettrici
 // Bagno: X=-3.0 ÷ -1.4 (1600mm), piena larghezza
 const BX1=-3.0, BX2=-1.40;
-const WC_X=-2.40, WC_Z=+0.55;
-const LAV_X=-1.85, LAV_Z=-0.65;
-const DOC_X=-2.60, DOC_Z=-0.30;
+const WC_X=-2.40, WC_Z=+0.55;   // coordinate mantenute per riferimenti elettrico
+const LAV_X=-2.67, LAV_Z=+0.97; // lavabo angolo SX 3D (parete X=-3, fondo Z=+1.25)
+const DOC_X=-2.60, DOC_Z=-0.30; // mantenute per riferimenti elettrico
 const DOOR_Z=-0.30;
 // Scala (lato corto destro)
 const N=14, RIS=SH/N, PED=0.280, STW=1.000;
@@ -1393,10 +1488,44 @@ function wall(nm,w,h,d,x,y,z,mat){
     `L:${(w*1000).toFixed(0)}·H:${(h*1000).toFixed(0)}·Sp:80mm\nPannello sandwich RAL 1019`)
     .position.set(x,y,z);
 }
-const DW=0.900,DH=2.100,SW2=(SL-DW)/2;
-wall('Parete frontale sx',SW2,SH,WT, -(DW/2+SW2/2),SH/2,-SW/2);
-wall('Parete frontale dx',SW2,SH,WT,  (DW/2+SW2/2),SH/2,-SW/2);
-wall('Sopra porta principale',DW,SH-DH,WT, 0,DH+(SH-DH)/2,-SW/2);
+/* ── FRONTE NUOVO 50/50 ────────────────────────────
+   0÷3000 (X:-3÷0): finestra scorrevole 3000×1800
+   3000÷4500 (X:0÷1.5): porta scorrevole 1500×2100 al 30%
+   4500÷6000 (X:1.5÷3): pannello cieco RAL 7035
+   ────────────────────────────────────────────────── */
+const FT2=0.060; // profilo alluminio
+const WIN_SILL=0.300, WIN_H=1.800, DOOR_H2=2.100;
+const WIN_TOP=WIN_SILL+WIN_H; // 2.100m
+
+// ── Pannello cieco DX (X:1.5÷3.0) ──
+wall('Pannello cieco RAL 7035 (DX)',1.500,SH,WT, 2.25,SH/2,-SW/2);
+// ── Pannello sotto davanzale (X:-3÷0, Y:0÷0.30) — chiude il container ──
+wall('Pannello sotto davanzale finestrone',3.000,WIN_SILL,WT, -1.50,WIN_SILL/2,-SW/2);
+
+// ── Pannello sopra finestrone SX (X:-3÷0, Y:2.1÷SH) ──
+wall('Pannello sopra finestrone (SX)',3.000,SH-WIN_TOP,WT, -1.50,WIN_TOP+(SH-WIN_TOP)/2,-SW/2);
+
+// ── Pannello sopra porta (X:0÷1.5, Y:2.1÷SH) ──
+wall('Pannello sopra porta scorrevole',1.500,SH-DOOR_H2,WT, 0.75,DOOR_H2+(SH-DOOR_H2)/2,-SW/2);
+
+// traverse e montanti rimossi — solo vetro e pannelli
+
+// ── Vetro anta fissa (X:-3÷-1.5) ──
+reg(grp(at(mk(bx(1.50-FT2*2,WIN_H-FT2*2,0.028),mGlass),0,0,0)),'struttura','Anta fissa finestrone (SX)',`L:1440·H:1740mm\nVetrocamera 6+16Ar+6·Uw:1.0W/m²K\nRw:36dB·basso-emissivo`).position.set(-2.25,WIN_SILL+WIN_H/2,-SW/2-0.014);
+
+// ── Anta scorrevole aperta al 50% (spostata +750mm su binario est.) ──
+reg(grp(
+  at(mk(bx(1.50-FT2*2,WIN_H-FT2*2,0.028),mGlass),0,0,0),
+  at(mk(bx(0.028,0.150,0.036),mAlum),0.64,0,0.018) // maniglia
+),'struttura','Anta scorrevole finestrone (chiusa)',`L:1440·H:1740mm\nVetrocamera 6+16Ar+6·Uw:1.0W/m²K\nScorrevole·posizione chiusa\nManiglia alluminio estruso`).position.set(-0.75,WIN_SILL+WIN_H/2,-SW/2-0.014);
+
+// ── PORTA SCORREVOLE 1500×2100 aperta al 30% ──
+// Pannello porta (spostato +450mm da chiuso)
+reg(grp(
+  at(mk(bx(1.50,DOOR_H2,0.042),mDoor),0,0,0),
+  at(mk(bx(1.52,0.032,0.032),mMetal),0,DOOR_H2/2+0.016,0),  // traverso sup
+  at(mk(bx(0.025,0.140,0.030),mInox),0.64,0,0.024)           // maniglia
+),'struttura','Porta scorrevole 1500×2100 (chiusa)',`L:1500·H:2100·Sp:42mm\nRAL 7035·Scorrevole su binario\nManiglia tubo inox Ø25`).position.set(0.75,DOOR_H2/2,-SW/2-0.030);
 wall('Parete posteriore',SL,SH,WT, 0,SH/2,SW/2);
 wall('Parete lat. sinistra',WT,SH,SW, -SL/2,SH/2,0);
 wall('Parete lat. destra',  WT,SH,SW,  SL/2,SH/2,0);
@@ -1405,90 +1534,13 @@ reg(grp(at(mk(bx(SL-WT*2,0.050,SW-WT*2),mFloor),0,0,0)),
   'struttura','Pavimento interno (lamiera striata)',
   `L:${((SL-WT*2)*1000).toFixed(0)}·W:${((SW-WT*2)*1000).toFixed(0)}mm\nSp:5mm zincata antiscivolo`)
   .position.set(0,0.025,0);
-// Parete divisoria bagno (semi-trasparente)
+// Bagnetto a vista — nessuna parete divisoria, solo lavabo nell'angolo SX
 const BDOOR_W=0.80,BDOOR_H=2.05;
 const seg=(SW-BDOOR_W)/2-0.05;
-wall('Parete divisoria bagno dx',WT,SH,seg, BX2,SH/2,-(SW/2-seg/2-0.05),mPart);
-wall('Parete divisoria bagno sx',WT,SH,seg, BX2,SH/2, (SW/2-seg/2-0.05),mPart);
-wall('Sopra porta bagno',WT,SH-BDOOR_H,BDOOR_W, BX2,BDOOR_H+(SH-BDOOR_H)/2,DOOR_Z,mPart);
 
-/* ──────────────────────────────────────────────
-   PORTA PRINCIPALE SCORREVOLE
-   ────────────────────────────────────────────── */
-reg(grp(
-  at(mk(bx(DW,DH,0.042),mDoor),0,0,0),
-  at(mk(bx(DW*2.2,0.032,0.032),mMetal),0,DH+0.02,0.025),
-  at(mk(bx(0.025,0.12,0.025),mInox),DW/2-0.05,DH/2,0.025)),
-  'struttura','Porta scorrevole frontale',
-  'L:900·H:2100·Sp:42mm\nTipo: scorrevole su binario\nFinish: RAL 7035\nManiglia: inox')
-  .position.set(DW*0.55,DH/2,-SW/2-0.021);
+/* vecchio finestrone rimosso — nuovo fronte sopra */
 
-/* ──────────────────────────────────────────────
-   PORTA BAGNO
-   ────────────────────────────────────────────── */
-reg(grp(
-  at(mk(bx(BDOOR_W,BDOOR_H,0.040),new THREE.MeshPhongMaterial({color:0xF0EEE8})),0,0,0),
-  at(mk(bx(BDOOR_W-0.02,BDOOR_H-0.02,0.004),new THREE.MeshPhongMaterial({color:0xDDDDCC})),0,0,0.022),
-  at(mk(bx(0.022,0.12,0.022),mInox),0.36,0,0.032)),
-  'sanitari','Porta bagno',
-  'L:800·H:2050·Sp:40mm\nBattente interna\nLaminato bianco lucido\nCerniere inox 3pz')
-  .position.set(BX2,RFL+BDOOR_H/2,DOOR_Z);
-
-/* ──────────────────────────────────────────────
-   FINESTRONE FRONTALE 1800×1400
-   Metà fissa + metà scorrevole
-   ────────────────────────────────────────────── */
-{
-  const FW=1.80,FH=1.40,FY=RFL+FH/2+0.10,FZ=-SW/2;
-  [[FW+0.08,0.06,0.06,0,FY+FH/2+0.03,FZ],
-   [FW+0.08,0.06,0.06,0,FY-FH/2-0.03,FZ],
-   [0.06,FH+0.06,0.06,-FW/2-0.03,FY,FZ],
-   [0.06,FH+0.06,0.06, FW/2+0.03,FY,FZ]
-  ].forEach(([w,h,d,x,y,z])=>
-    reg(grp(at(mk(bx(w,h,d),mAlum),0,0,0)),
-      'struttura','Telaio finestrone frontale (alluminio)',
-      'Profilo 60×60mm anodizzato argento').position.set(x,y,z));
-  reg(grp(at(mk(bx(0.06,FH,0.06),mAlum),0,0,0)),
-    'struttura','Montante centrale finestrone','60×60mm alluminio')
-    .position.set(0,FY,FZ);
-  reg(grp(at(mk(bx(FW/2-0.06,FH-0.06,0.024),mGlass),0,0,0)),
-    'struttura','Finestrone — anta fissa (sx)',
-    `L:${((FW/2-0.06)*1000).toFixed(0)}·H:${((FH-0.06)*1000).toFixed(0)}mm\nVetrocamera 4+12+4 basso-emissivo\nUw:1.1W/m²K·Rw:34dB`)
-    .position.set(-FW/4,FY,FZ-0.012);
-  reg(grp(
-    at(mk(bx(FW/2-0.06,FH-0.06,0.024),mGlass),0,0,0),
-    at(mk(bx(0.018,0.140,0.028),mAlum),FW/4-0.10,0,0.016)),
-    'struttura','Finestrone — anta scorrevole (dx)',
-    `L:${((FW/2-0.06)*1000).toFixed(0)}mm · scorrevole orizzontale\nVetrocamera 4+12+4\n(mostrata parzialmente aperta)`)
-    .position.set(FW/4+0.12,FY,FZ-0.010);
-  reg(grp(at(mk(bx(FW+0.10,0.030,0.040),mAlum),0,0,0)),
-    'struttura','Binario superiore finestrone','Alluminio 30×40mm')
-    .position.set(0,FY+FH/2+0.015,FZ-0.020);
-  reg(grp(at(mk(bx(FW+0.12,FH+0.12,0.012),mMetal),0,0,0)),
-    'struttura','Griglia protezione finestrone',
-    `L:${((FW+0.12)*1000).toFixed(0)}·H:${((FH+0.12)*1000).toFixed(0)}mm\nPiattina Fe 30×4@60mm zincata`)
-    .position.set(0,FY,FZ-0.030);
-}
-
-/* ──────────────────────────────────────────────
-   FINESTRA LATERALE 800×600
-   ────────────────────────────────────────────── */
-{
-  const WW=0.80,WH=0.60,WY=RFL+WH/2+0.60,WZ=-SW/2;
-  [[WW+0.06,0.05,0.05,0,WY+WH/2+0.025,WZ],
-   [WW+0.06,0.05,0.05,0,WY-WH/2-0.025,WZ],
-   [0.05,WH,0.05,-WW/2-0.025,WY,WZ],
-   [0.05,WH,0.05, WW/2+0.025,WY,WZ]
-  ].forEach(([w,h,d,x,y,z])=>
-    reg(grp(at(mk(bx(w,h,d),mAlum),0,0,0)),'struttura',
-      'Telaio finestra laterale','50×50mm alluminio anodizzato').position.set(x+1.5,y,z));
-  reg(grp(
-    at(mk(bx(WW-0.01,WH-0.01,0.024),mGlass),0,0,0),
-    at(mk(bx(0.012,0.120,0.025),mAlum),WW/4-0.03,0,0.018)),
-    'struttura','Finestra laterale scorrevole 800×600',
-    'L:800·H:600·Sp:24mm\nVetrocamera 4+12+4\nScorrimento orizzontale')
-    .position.set(1.5,WY,WZ-0.010);
-}
+/* vecchia finestra laterale rimossa — nel nuovo fronte non serve */
 
 /* ──────────────────────────────────────────────
    TETTO + COPERTURA
@@ -1520,96 +1572,98 @@ balFront.add(bRail(0,RY+PH,-SW/2+RS/2,SL-0.1,RS));
 balFront.add(bRail(0,RY+PH*.55,-SW/2+RS/2,SL-0.1,RS));
 reg(balFront,'tetto','Balaustra frontale','Montanti 50×50·Correnti Ø38mm·H:1000mm·S275');
 
+// Balaustra SX con gap centrale per accesso scala (gap Z:-0.60÷+0.60)
 const balSx=new THREE.Group();
-balSx.add(bPosts('z',-SW/2+0.05,SW/2-0.05,-SL/2+PS/2));
-balSx.add(bRail(-SL/2+RS/2,RY+PH,0,RS,SW-0.1));
-balSx.add(bRail(-SL/2+RS/2,RY+PH*.55,0,RS,SW-0.1));
-reg(balSx,'tetto','Balaustra laterale sinistra','Montanti 50×50·H:1000mm·S275');
+balSx.add(bPosts('z',-SW/2+0.05,-0.60,-SL/2+PS/2));
+balSx.add(bRail(-SL/2+RS/2,RY+PH,(-SW/2-0.60)/2,RS,(SW/2-0.60-0.1)));
+balSx.add(bRail(-SL/2+RS/2,RY+PH*.55,(-SW/2-0.60)/2,RS,(SW/2-0.60-0.1)));
+const balSx2=new THREE.Group();
+balSx2.add(bPosts('z',0.60,SW/2-0.05,-SL/2+PS/2));
+balSx2.add(bRail(-SL/2+RS/2,RY+PH,(0.60+SW/2)/2,RS,(SW/2-0.60-0.1)));
+balSx2.add(bRail(-SL/2+RS/2,RY+PH*.55,(0.60+SW/2)/2,RS,(SW/2-0.60-0.1)));
+reg(balSx,'tetto','Balaustra laterale sinistra (ant., gap scala)','Gap Z=±600mm per accesso scala');
+reg(balSx2,'tetto','Balaustra laterale sinistra (post., gap scala)','Gap Z=±600mm per accesso scala');
 
 const balRear=new THREE.Group();
-balRear.add(bPosts('x',-SL/2+0.05,0.85,SW/2-PS/2));
-balRear.add(bRail((-SL/2+0.85)/2,RY+PH,SW/2-RS/2,(SL/2+0.85-0.1),RS));
-balRear.add(bRail((-SL/2+0.85)/2,RY+PH*.55,SW/2-RS/2,(SL/2+0.85-0.1),RS));
-reg(balRear,'tetto','Balaustra posteriore (gap scala)','Gap X=1.0÷3.0m per accesso scala');
+balRear.add(bPosts('x',-SL/2+0.05,SL/2-0.05,SW/2-PS/2));
+balRear.add(bRail(0,RY+PH,SW/2-RS/2,SL-0.1,RS));
+balRear.add(bRail(0,RY+PH*.55,SW/2-RS/2,SL-0.1,RS));
+reg(balRear,'tetto','Balaustra posteriore (completa)','Balaustra continua lato posteriore');
 
+// Balaustra DX completa — scala sul lato SX opposto
 const balDx=new THREE.Group();
-balDx.add(bPosts('z',-SW/2+0.05,-0.30,SL/2-PS/2));
-balDx.add(bRail(SL/2-RS/2,RY+PH,(-SW/2-0.3)/2,RS,(SW/2-0.3-0.1)));
-balDx.add(bRail(SL/2-RS/2,RY+PH*.55,(-SW/2-0.3)/2,RS,(SW/2-0.3-0.1)));
-reg(balDx,'tetto','Balaustra destra (parziale)','Parziale: gap per accesso scala lato corto');
+balDx.add(bPosts('z',-SW/2+0.05,SW/2-0.05,SL/2-PS/2));
+balDx.add(bRail(SL/2-RS/2,RY+PH,0,RS,SW-0.1));
+balDx.add(bRail(SL/2-RS/2,RY+PH*.55,0,RS,SW-0.1));
+reg(balDx,'tetto','Balaustra laterale destra (completa)','Continua — scala sul lato SX opposto');
 
 /* ──────────────────────────────────────────────
-   SCALA METALLICA (piè d'oca)
-   1° rampa lato corto dx → pianerottolo → 2° rampa lato lungo post.
+   SCALA METALLICA DRITTA — PARETE CORTA SX
+   Salita in direzione +X guardando il container
+   Sviluppo orizzontale fuori dalla parete SX
    ────────────────────────────────────────────── */
 {
 const scG=new THREE.Group();
-const TREAD=0.030, UPN_H=0.200, UPN_W=0.010;
+const N_SC=14;
+const RIS_SC=(SH+0.082)/N_SC;  // alzata fino al piano calpestabile tetto ≈191mm
+const PED_SC=0.270;             // pedata 270mm
+const STW_SC=1.000;             // larghezza scala
+const TREAD_SC=0.030;           // spessore pedana graticciata
+const UPN_H_SC=0.200, UPN_W_SC=0.010;
+const X_WALL=-SL/2;             // -3.0 — parete SX
+const X_BOT=X_WALL-N_SC*PED_SC; // -3.0 - 3.78 = -6.78 — piede scala (esce verso -X)
+const SC_ZC=0.0;               // centrata sulla parete SX
 
-// 1° rampa: 7 gradini in +Z
-for(let i=0;i<7;i++){
-  const zc=F1_Z0+i*PED+PED/2, yt=(i+1)*RIS;
-  scG.add(at(mk(bx(STW,TREAD,PED),mGrate),F1_XC,yt-TREAD/2,zc));
-  scG.add(at(mk(bx(STW,0.040,0.012),mMetal),F1_XC,yt-0.020,F1_Z0+i*PED+0.006));
+// ── Gradini (solo pedane graticciato, no alzate) ──
+for(let i=0;i<N_SC;i++){
+  const xc=X_BOT+(i+0.5)*PED_SC;
+  const yt=(i+1)*RIS_SC;
+  scG.add(at(mk(bx(PED_SC,TREAD_SC,STW_SC),mGrate),xc,yt-TREAD_SC/2,SC_ZC));
 }
-// Longheroni UPN 1° rampa
-const L1=Math.sqrt(Math.pow(7*PED,2)+Math.pow(7*RIS,2));
-const A1=Math.atan2(7*RIS,7*PED);
-[-1,1].forEach(s=>{
-  const lng=mk(bx(UPN_W,UPN_H,L1),mMetal);
-  lng.position.set(F1_XC+s*(STW/2+UPN_W/2),7*RIS/2,F1_Z0+7*PED/2);
-  lng.rotation.x=-A1; scG.add(lng);
-});
-// Pianerottolo
-const LAND_Y=7*RIS, LAND_Z0=F1_Z0+7*PED;
-const LAND_XC=SL/2+0.05+0.65;
-const LAND_ZC=LAND_Z0+0.50;
-scG.add(at(mk(bx(1.30,0.008,1.00),mGrate),LAND_XC,LAND_Y,LAND_ZC));
-// 2° rampa: 7 gradini in -X
-const F2_ZC=SW/2+0.05+STW/2;
-const F2_X0=SL/2+0.05;
-for(let i=0;i<7;i++){
-  const xc=F2_X0-i*PED-PED/2, yt=LAND_Y+(i+1)*RIS;
-  scG.add(at(mk(bx(PED,TREAD,STW),mGrate),xc,yt-TREAD/2,F2_ZC));
-  scG.add(at(mk(bx(0.012,0.040,STW),mMetal),F2_X0-i*PED+0.006,yt-0.020,F2_ZC));
-}
-// Longheroni UPN 2° rampa
-const L2=Math.sqrt(Math.pow(7*PED,2)+Math.pow(7*RIS,2));
-const A2=Math.atan2(7*RIS,7*PED);
-[-1,1].forEach(s=>{
-  const lng=mk(bx(L2,UPN_H,UPN_W),mMetal);
-  lng.position.set(F2_X0-7*PED/2,LAND_Y+7*RIS/2,F2_ZC+s*(STW/2+UPN_W/2));
-  lng.rotation.z=A2; scG.add(lng);
-});
-// Corrimano inox Ø42
+
+// longheroni obliqui rimossi
+const SC_LEN=Math.sqrt(Math.pow(N_SC*PED_SC,2)+Math.pow(N_SC*RIS_SC,2));
+const SC_ANG=Math.atan2(N_SC*RIS_SC,N_SC*PED_SC);
+
+// ── Corrimano inox Ø42mm (2 lati) ──
 const CR=0.022;
 function crb(x1,y1,z1,x2,y2,z2){scG.add(tube(x1,y1,z1,x2,y2,z2,CR,mInox));}
-crb(F1_XC+STW/2+0.05,0.050,-0.25,F1_XC+STW/2+0.05,7*RIS+0.90,F1_Z0+7*PED);
-crb(F2_X0+0.05,LAND_Y+0.050,F2_ZC+STW/2+0.05,F2_X0-7*PED,SH+0.90,F2_ZC+STW/2+0.05);
-for(let i=0;i<=3;i++){
-  const z=F1_Z0+(7*PED/3)*i,y=(7*RIS/3)*i+RIS;
-  scG.add(at(mk(cy(CR*0.8,0.900,8),mInox),F1_XC+STW/2+0.05,y+0.450,z));
-}
-for(let i=0;i<=3;i++){
-  const x=F2_X0-(7*PED/3)*i,y=LAND_Y+(7*RIS/3)*i+RIS;
-  scG.add(at(mk(cy(CR*0.8,0.900,8),mInox),x,y+0.450,F2_ZC+STW/2+0.05));
-}
-[F1_XC-STW/2-0.02,F1_XC+STW/2+0.02].forEach(px=>
-  scG.add(at(mk(bx(0.150,0.012,0.150),mMetal),px,-0.006,F1_Z0+PED/2)));
-reg(scG,'scala','Scala metallica piè d\'oca',
-  `14 gradini (7+7) · pedana graticciata 30mm\nLongheroni UPN200 acciaio S275\nCorrimano tubo inox Ø42mm\nPedata:280·Alzata:${(RIS*1000).toFixed(0)}mm\n1°rampa lato corto dx → pianerottolo ${(LAND_Y*1000).toFixed(0)}mm\n2°rampa lato lungo posteriore`);
+[-1,1].forEach(s=>{
+  const ZH=SC_ZC+s*(STW_SC/2+0.05);
+  crb(X_BOT+PED_SC,RIS_SC+0.90,ZH, X_WALL,SH+0.082+0.90,ZH);
+  // palo verticale piede scala — termina a terra
+  scG.add(at(mk(cy(CR,RIS_SC+0.90,8),mInox),X_BOT+PED_SC,(RIS_SC+0.90)/2,ZH));
+});
+
+// ── Basette di ancoraggio a terra ──
+[-STW_SC/2-0.02,STW_SC/2+0.02].forEach(pz=>
+  scG.add(at(mk(bx(0.180,0.014,0.180),mMetal),X_BOT,-0.007,SC_ZC+pz)));  // basette piede
+
+reg(scG,'scala','Scala metallica dritta — parete SX',
+  `${N_SC} gradini · pedana graticciata 30mm\nCorrimano tubo inox Ø42mm h=900mm\nPedata:${(PED_SC*1000).toFixed(0)}mm·Alzata:${(RIS_SC*1000).toFixed(0)}mm\nLarghezza netta:1000mm\nInclinazione:${(SC_ANG*180/Math.PI).toFixed(1)}°\nSalita da SX (−X) guardando il container`);
 }
 
 /* ──────────────────────────────────────────────
-   ESTRATTORE FUMO + SENSORI + LAMPADE
+   ESTRATTORE FUMO E CALORE — PARETE SINISTRA
+   Quota asse = 2100mm, parete X = -SL/2
+   Griglia antipioggia esterna + raccordo Ø150
    ────────────────────────────────────────────── */
-const efc=new THREE.Group();
-efc.add(at(mk(bx(0.50,0.25,0.50),mExtr),0,0,0));
-efc.add(at(mk(cy(0.090,0.38,10),mExtr),0,0.315,0));
-efc.add(at(mk(cy(0.160,0.030,12),mExtr),0,0.505,0));
-reg(efc,'accessori','Estrattore fumo e calore (EFC)',
-  'Base:500×500·H:250mm\nCamino:Ø180·H:380mm\nPortata:2000m³/h\nClasse C300·EN 12101-3·IP54')
-  .position.set(-1.5,SH+0.082+0.125,-0.30);
+{
+const EFC_Y=2.100, EFC_Z=0.0; // posizione centrale sull'asse Z
+const WALL_X=-SL/2; // -3.000
+
+const efcG=new THREE.Group();
+// Corpo ventilatore interno (200×300×300mm) — solo dentro la parete
+efcG.add(at(mk(bx(0.160,0.280,0.280),mExtr),0.090,0,0));
+// Flangia a parete (flush con il muro)
+efcG.add(at(mk(bx(0.008,0.360,0.360),mMetal),0.004,0,0));
+// Griglia esterna antipioggia piatta — un solo pannello pulito
+efcG.add(at(mk(bx(0.020,0.300,0.300),new THREE.MeshPhongMaterial({color:0x707880})),-0.010,0,0));
+
+reg(efcG,'accessori','Estrattore fumo e calore (EFC) — Parete SX',
+  'Tipo: centrifugo a muro\nPortata:2000m³/h·220V 50Hz\nAsse:Ø150mm\nH inst.:2100mm\nGriglia antipioggia lame all.\nClasse C300·EN 12101-3·IP54·Ex II 2G')
+  .position.set(WALL_X,EFC_Y,EFC_Z);
+}
 
 // Dräger Polytron 5200 IN ALTO (metano < aria)
 [[-1.8,-SW/2+WT+0.05,'CH4 zona sinistra'],[1.8,SW/2-WT-0.05,'CH4 zona destra']].forEach(([sx,sz,z])=>{
@@ -1682,32 +1736,18 @@ function rc(x,y,z,r,mat,nm){
   const t=raccord(x,y,z,r,mat); t.userData.name=nm||'Raccordo';
   IDR.add(t); pickable.push(t); return t;
 }
-// Acqua fredda
-tb(SL/2-WT,0.40,-0.90,SL/2-WT,YPIPE,-0.90,RAF,mAF,'Colonna AF ingresso','Ø20mm PP-R PN10 BLU\nIngresso da rete esterna·max 6bar');
-rc(SL/2-WT,YPIPE,-0.90,RAF,mRacc,'Raccordo T AF');
-tb(SL/2-WT,YPIPE,-0.90,BX2-0.10,YPIPE,-0.90,RAF,mAF,'Collettore AF principale','Ø20mm PP-R·L≈4600mm sotto pavimento\nIsolamento espanso');
-rc(WC_X,YPIPE,-0.90,RAF,mRacc,'Raccordo T AF→WC');
-tb(WC_X,YPIPE,-0.90,WC_X,YPIPE,WC_Z-0.10,RAF,mAF,'Derivazione AF→WC','Ø20mm PP-R');
-tb(WC_X,YPIPE,WC_Z-0.10,WC_X,RFL+0.06,WC_Z-0.10,RAF,mAF,'Risalita AF cassetta WC','Ø20mm PP-R attacco cassetta');
-rc(LAV_X,YPIPE,-0.90,RAF,mRacc,'Raccordo T AF→Lavabo');
-tb(LAV_X,YPIPE,-0.90,LAV_X,YPIPE,LAV_Z,RAF,mAF,'Derivazione AF→Lavabo','Ø20mm PP-R');
-tb(LAV_X,YPIPE,LAV_Z,LAV_X,RFL+0.55,LAV_Z,RAF,mAF,'Risalita AF Lavabo','Ø20mm→rubinetteria');
-rc(-2.60,YPIPE,-0.90,RAF,mRacc,'Raccordo T AF→Doccia');
-tb(-2.60,YPIPE,-0.90,DOC_X,YPIPE,DOC_Z,RAF,mAF,'Derivazione AF→Doccia','Ø20mm PP-R');
-tb(DOC_X,YPIPE,DOC_Z,DOC_X,RFL+1.80,DOC_Z,RAF,mAF,'Risalita AF soffione doccia','Ø20mm PP-R');
-// Acqua calda
-tb(BX2-0.10,RFL+1.00,-0.75,LAV_X,YPIPE,-0.80,RAC,mAC,'Tubo AC boiler→collettore','Ø20mm PP-R ROSSO\nIsolamento espanso');
-tb(LAV_X,YPIPE,-0.80,LAV_X,YPIPE,LAV_Z+0.02,RAC,mAC,'Derivazione AC→Lavabo','Ø20mm PP-R');
-tb(LAV_X,YPIPE,LAV_Z+0.02,LAV_X,RFL+0.55,LAV_Z+0.02,RAC,mAC,'Risalita AC Lavabo','Ø20mm→rubinetteria');
-tb(-2.60,YPIPE,-0.80,DOC_X,YPIPE,DOC_Z+0.03,RAC,mAC,'Derivazione AC→Doccia','Ø20mm PP-R');
-tb(DOC_X,YPIPE,DOC_Z+0.03,DOC_X,RFL+1.80,DOC_Z+0.03,RAC,mAC,'Risalita AC doccia','Ø20mm PP-R');
-// Scarico
-tb(WC_X,RFL-0.01,WC_Z,WC_X,-0.025,WC_Z,RSCR*1.8,mScar,'Scarico WC Ø110','PVC grigio Ø110·pendenza 2%');
-rc(WC_X,-0.025,WC_Z,RSCR*1.8,mScar,'Raccordo 90° Ø110');
-tb(WC_X,-0.025,WC_Z,SL/2-WT,-0.025,WC_Z,RSCR*1.8,mScar,'Collettore scarico Ø110','PVC Ø110·pendenza 2%·uscita pozzetto');
-tb(LAV_X,RFL+0.10,LAV_Z,LAV_X,-0.015,LAV_Z,RSCR,mScar,'Scarico lavabo Ø40','PVC bianco Ø40·sifone bottiglietta');
-tb(LAV_X,-0.015,LAV_Z,WC_X,-0.015,LAV_Z,RSCR,mScar,'Collettore scarico lavabo','Ø40 PVC·pendenza 2%');
-tb(DOC_X,-0.01,DOC_Z,DOC_X,-0.015,DOC_Z-0.3,RSCR,mScar,'Scarico doccia Ø50','Ø50·sifone piatto sifonato');
+// ── Acqua Fredda — solo lavabo (LAV_X=-2.67, LAV_Z=+0.97) ──
+tb(-SL/2+WT,0.40,LAV_Z, -SL/2+WT,YPIPE,LAV_Z, RAF,mAF,'Colonna AF ingresso','Ø20mm PP-R PN10 BLU\nIngresso da rete esterna·max 6bar');
+rc(-SL/2+WT,YPIPE,LAV_Z, RAF,mRacc,'Raccordo T AF');
+tb(-SL/2+WT,YPIPE,LAV_Z, LAV_X,YPIPE,LAV_Z, RAF,mAF,'Derivazione AF→Lavabo','Ø20mm PP-R sotto pavimento');
+tb(LAV_X,YPIPE,LAV_Z, LAV_X,RFL+0.55,LAV_Z, RAF,mAF,'Risalita AF Lavabo','Ø20mm PP-R→rubinetteria');
+// ── Acqua Calda — da Ariston (X=-2.88, Z=+0.90) ──
+tb(-2.88,RFL+1.00,+0.90, -2.88,YPIPE,+0.90, RAC,mAC,'Discesa AC Ariston','Ø20mm PP-R ROSSO');
+tb(-2.88,YPIPE,+0.90, LAV_X,YPIPE,LAV_Z, RAC,mAC,'Derivazione AC→Lavabo','Ø20mm PP-R');
+tb(LAV_X,YPIPE,LAV_Z, LAV_X,RFL+0.55,LAV_Z+0.02, RAC,mAC,'Risalita AC Lavabo','Ø20mm PP-R→rubinetteria');
+// ── Scarico lavabo Ø40 ──
+tb(LAV_X,RFL+0.10,LAV_Z, LAV_X,-0.015,LAV_Z, RSCR,mScar,'Scarico lavabo Ø40','PVC bianco Ø40·sifone bottiglietta');
+tb(LAV_X,-0.015,LAV_Z, -SL/2+WT,-0.015,LAV_Z, RSCR,mScar,'Collettore scarico','Ø40 PVC·pendenza 2%·uscita pozzetto');
 LYR['idrico'].push(IDR); scene.add(IDR);
 }
 
@@ -1726,34 +1766,61 @@ function cd(x1,y1,z1,x2,y2,z2,s,mat,nm,di){
     new THREE.Vector3(dx,dy,dz).normalize());
   m.userData.name=nm; m.userData.dims=di; EL.add(m); pickable.push(m); return m;
 }
-// Quadro elettrico
+// Quadro elettrico Bticino Pragma — profondità 140mm, portellino aperto SX
+{
 const QE=new THREE.Group();
-QE.add(at(mk(bx(0.65,0.90,0.16),mQEb),0,0,0));
-QE.add(at(mk(bx(0.63,0.88,0.010),mQEd),0,0,0.082));
-QE.add(at(mk(bx(0.45,0.60,0.005),new THREE.MeshPhongMaterial({color:0x112233})),0,0.03,0.075));
-QE.add(at(mk(bx(0.025,0.12,0.020),new THREE.MeshPhongMaterial({color:0xCCCCCC})),0.28,0,0.088));
-QE.add(at(mk(sp(0.015),new THREE.MeshPhongMaterial({color:0x00FF44,emissive:0x004400,emissiveIntensity:0.8})),-0.22,0.36,0.082));
-// MCB visibili
-[-0.22,-0.12,-0.02,0.08,0.18].forEach((dx,i)=>{
-  const cb=at(mk(bx(0.040,0.070,0.010),new THREE.MeshPhongMaterial({color:i<2?0x333333:0x555555})),dx,RFL+1.05-1.10,-SW/2+WT+0.158+0.10);
-  cb.userData.name=['MCB 40A 4P diff.','MCB C10/1P luce','MCB C16/1P prese','MCB C32/1P forza','MCB C16/1P boiler'][i];
-  cb.userData.dims='Interruttore automatico';
-  QE.add(cb); pickable.push(cb);
+// Corpo cassetta IP65 IK10
+QE.add(at(mk(bx(0.65,0.90,0.140),mQEb),0,0,0));
+// Pannello frontale bianco (sportello aperto sul lato SX — ruotato 90°)
+const sportello=new THREE.Group();
+sportello.add(at(mk(bx(0.63,0.88,0.010),mQEd),0,0,0));
+// Etichetta Bticino Pragma (rettangolo blu su sportello)
+sportello.add(at(mk(bx(0.18,0.050,0.002),new THREE.MeshPhongMaterial({color:0x1144AA})),0,0.39,0.006));
+// Sigillo CEI (cerchio dorato)
+sportello.add(at(mk(cy(0.022,0.004,12),new THREE.MeshPhongMaterial({color:0xCCAA00,shininess:120})),0.27,-0.40,0.006));
+sportello.position.set(-0.325,0,0.070);
+sportello.rotation.y=-Math.PI/2; // aperto sul lato sinistro
+QE.add(sportello);
+// Interno: DIN-rail (3 sbarre orizzontali inox)
+[-0.28,0,0.28].forEach(dy=>{
+  QE.add(at(mk(bx(0.58,0.014,0.010),new THREE.MeshPhongMaterial({color:0xB0B8B0,shininess:80})),0,dy,0.040));
 });
-QE.position.set(1.80,RFL+1.10,-SW/2+WT+0.10);
-QE.userData.name='Quadro elettrico di zona (QZ)';
+// 10 MCB con leve colorate (rosso=diff gen, arancio=HVAC/scalda, giallo=prese, blu=luci)
+const mcbColors=[0xCC1111,0xCC1111,0xFF6600,0xFF6600,0xFFCC00,0xFFCC00,0xFFCC00,0x2266CC,0x2266CC,0x2266CC];
+const mcbNames=['Diff. gen. 40A 4P','MCB 40A 4P+N','MCB C16 HVAC','MCB C16 Scalda','MCB C16/1P Prese(1)','MCB C16/1P Prese(2)','MCB C32/1P Forza','MCB C10/1P Luce(1)','MCB C10/1P Luce(2)','MCB C10/1P Emerg.'];
+mcbColors.forEach((col,i)=>{
+  const row=Math.floor(i/5), col_x=-0.22+0.11*(i%5);
+  const mcb=new THREE.Group();
+  // Corpo MCB
+  mcb.add(at(mk(bx(0.036,0.072,0.060),new THREE.MeshPhongMaterial({color:0x222222})),0,0,0));
+  // Leva colorata
+  mcb.add(at(mk(bx(0.020,0.020,0.015),new THREE.MeshPhongMaterial({color:col})),0,0.025,0.032));
+  mcb.position.set(col_x,-0.16+row*0.35,0.080);
+  mcb.userData.name=mcbNames[i];
+  mcb.userData.dims=`${i<2?'Differenziale':'Interruttore automatico'}\nBticino Pragma TS60`;
+  QE.add(mcb); pickable.push(mcb);
+});
+// LED verde stato
+QE.add(at(mk(sp(0.012),new THREE.MeshPhongMaterial({color:0x00FF44,emissive:0x003300,emissiveIntensity:0.9})),-0.28,0.42,0.072));
+// Parete laterale destra, faccia interna — sempre visibile appena si entra
+QE.rotation.y=Math.PI/2;  // faccia verso -X (verso interno)
+QE.position.set(SL/2-WT-0.075, RFL+1.10, -0.80);
+QE.userData.name='Quadro elettrico Bticino Pragma (QP)';
 QE.userData.dims=
-`Dim: 650×900×160mm · IP65 · IK10
-Interruttore gen.: 40A 4P+N
-MCB C10/1P — Luce bagno
-MCB C10/1P — Luci locale (2 circ.)
-MCB C16/1P — Boiler 1500W
-MCB C16/1P — Prese Schuko 16A
-MCB C32/1P — Presa forza 32A
-Differenziale 25A/30mA tipo A
-Barra PE+N separata
-Alimentazione: 230/400V 50Hz`;
+`Dim: 650×900×140mm · IP65 · IK10
+Bticino Pragma TS60
+Diff. gen. 40A 4P 30mA tipo A
+MCB 40A 4P+N — Generale
+MCB C16/2P — HVAC split AUX
+MCB C16/1P — Scalda-acqua
+MCB C16/1P — Prese Schuko (×2 circ.)
+MCB C32/1P — Presa forza CEE 32A
+MCB C10/1P — Luci (2 circuiti)
+MCB C10/1P — Luce emergenza
+Barra PE+N separata·230/400V 50Hz
+Sigillo CEI·Portellino aperto`;
 EL.add(QE); pickable.push(QE);
+}
 // Cavo principale
 cd(1.80,0,-SW/2+0.25,1.80,RFL+0.28,-SW/2+0.25,0.042,mCond,
   'Cavo alimentazione principale','FG7OR 4G16mm²+PE 16mm²\nDa punto consegna esterno\nTubazione interrata Ø63 PVC');
@@ -1779,7 +1846,7 @@ lsp.position.set(LAV_X,RFL+1.68,LAV_Z-0.038);
 lsp.userData.name='Lampada specchio LED IP44';
 lsp.userData.dims='12W·IP44·1200lm·500×58×72mm\nCCT 2700-4000K regolabile';
 EL.add(lsp); pickable.push(lsp);
-cd(BX2+0.08,SH-0.28,-SW/2+0.28,LAV_X,RFL+1.70,LAV_Z-0.04,0.018,mLuce,'Cavo lampada specchio','Tubo corrugato Ø16mm·3×1.5mm²');
+cd(LAV_X,SH-0.10,LAV_Z, LAV_X,RFL+1.72,LAV_Z, 0.018,mLuce,'Cavo lampada specchio','Tubo corrugato Ø16mm·3×1.5mm²');
 // Circuito luce principale
 cd(1.80,RFL+1.80,-SW/2+0.22,-1.0,RFL+1.80,-SW/2+0.22,0.028,mLuce,
   'Circuito luce locale principale','Tubo corrugato Ø20mm H=2300mm\nFG16OR16 3×1.5mm²·C2-Luce');
@@ -1804,59 +1871,316 @@ LYR['elettrico'].push(EL); scene.add(EL);
 /* ──────────────────────────────────────────────
    SANITARI
    ────────────────────────────────────────────── */
-// Boiler
-{const bg=grp(
-  at(mk(bx(0.50,0.58,0.30),mBoil),0,0,0),
-  at(mk(bx(0.48,0.56,0.005),new THREE.MeshPhongMaterial({color:0xEEEEEE})),0,0,0.153),
-  at(mk(bx(0.12,0.08,0.04),new THREE.MeshPhongMaterial({color:0xCCCCCC})),0,0.22,0.160),
-  at(mk(cy(0.018,0.10),new THREE.MeshPhongMaterial({color:0x888888})),0,-0.30,0));
-reg(bg,'sanitari','Scalda-acqua elettrico (boiler)',
-  'Capacità:50L·Potenza:1500W·230Vac\nDim:500×580×300mm·orizzontale\nClasse A·Antilegionella T>65°C\nAF+AC Ø15').position.set(BX2-0.30,RFL+1.00,-0.75);}
+// Ariston Fast Evo — scaldabagno istantaneo a parete dentro mobile angolare
+{const arist=new THREE.Group();
+// Corpo principale bianco
+arist.add(at(mk(bx(0.276,0.445,0.185),new THREE.MeshPhongMaterial({color:0xF5F5F5,shininess:40})),0,0,0));
+// Pannello frontale con display
+arist.add(at(mk(bx(0.274,0.443,0.006),new THREE.MeshPhongMaterial({color:0xEEEEEE})),0,0,0.096));
+// Display LED (piccola finestra)
+arist.add(at(mk(bx(0.080,0.040,0.004),new THREE.MeshPhongMaterial({color:0x001100,emissive:0x003300,emissiveIntensity:0.6})),-0.06,0.10,0.099));
+// Manopola temperatura
+arist.add(at(mk(cy(0.022,0.010,10),new THREE.MeshPhongMaterial({color:0xFF4400})),0.08,0.10,0.100));
+// Attacchi AF/AC (tubi sotto)
+arist.add(at(mk(cy(0.012,0.040,8),new THREE.MeshPhongMaterial({color:0x2266EE})),-0.06,-0.240,0.050));
+arist.add(at(mk(cy(0.012,0.040,8),new THREE.MeshPhongMaterial({color:0xEE3322})),0.06,-0.240,0.050));
+reg(arist,'sanitari','Ariston Fast Evo 11 — Scaldabagno istantaneo',
+  'Modello: Ariston Fast Evo 11\nPotenza:11kW·230/400V·Elettronico\nDim:276×445×185mm·a parete\nPortata:5L/min·ERP:A+\nAntilegionella·Display LED\nAF+AC Ø15·dentro mobile angolare')
+  .position.set(-2.88,RFL+1.00,+0.90);}
 
-// WC
-{const wc=new THREE.Group();
-wc.add(at(mk(bx(0.380,0.330,0.115),new THREE.MeshPhongMaterial({color:0xEEEEEE,transparent:true,opacity:0.6})),0,0.165+0.115,0.005)); // cassetta
-wc.add(at(mk(bx(0.370,0.360,0.550),mCer),0,0.180,-0.025));
-wc.add(at(mk(bx(0.360,0.020,0.460),mCer),0,0.365,0.005));
-wc.add(at(mk(bx(0.355,0.018,0.440),new THREE.MeshPhongMaterial({color:0xF0F0EC})),0,0.385,0.005));
-wc.add(at(mk(bx(0.12,0.025,0.065),new THREE.MeshPhongMaterial({color:0xCCCCCC,shininess:100})),0,0.355,-0.055));
-reg(wc,'sanitari','WC sospeso con cassetta incassata',
-  'Seduta:370×550mm·H:485mm\nCassetta zaino:380×330×115mm\nCeramica bianca\nScarico pavimento Ø110\nAF Ø15·dist. muro-bordo:360mm\nCE–UNI EN 997').position.set(WC_X,RFL,WC_Z);}
+// WC rimosso — bagnetto solo lavabo
 
-// Lavabo
-{const lv=new THREE.Group();
-lv.add(at(mk(bx(0.500,0.155,0.380),mCer),0,0.0775,0));
-lv.add(at(mk(bx(0.510,0.020,0.390),new THREE.MeshPhongMaterial({color:0xF5F5F0})),0,0.157,0));
-lv.add(at(mk(bx(0.145,0.520,0.200),mCer),0,-0.260,0.055));
-lv.add(at(mk(bx(0.040,0.110,0.040),mInox),0,0.170,0));
-lv.add(at(mk(bx(0.010,0.055,0.065),mInox),0,0.250,-0.002));
-lv.add(at(mk(cy(0.022,0.080,8),new THREE.MeshPhongMaterial({color:0xCCCCCC})),0,-0.010,0.060));
-reg(lv,'sanitari','Lavabo su colonna in ceramica',
-  'L:500·P:380·H bacinella:155mm\nColonna:520mm\nRubinetteria monocomando\nScarico clic-clac Ø40+sifone\nAF+AC Ø15·CE–UNI EN 31').position.set(LAV_X,RFL,LAV_Z);}
+// Lavabo angolare + mobile a L 650×650 — angolo SX-fondo (parete X=-3, parete Z=+1.25)
+{
+// Mobile a L — braccio lungo parete sinistra (X=-3), appoggiato a parete posteriore
+const mob1=at(mk(bx(0.660,0.850,0.060),new THREE.MeshPhongMaterial({color:0xE8E0D0})),-2.97,RFL+0.850/2,+0.95);
+mob1.userData.name='Mobile angolare (braccio SX)'; LYR['sanitari'].push(mob1); scene.add(mob1); pickable.push(mob1);
+// Mobile a L — braccio lungo parete posteriore (Z=+1.25), appoggiato a parete sinistra
+const mob2=at(mk(bx(0.060,0.850,0.630),new THREE.MeshPhongMaterial({color:0xE8E0D0})),-2.65,RFL+0.850/2,+1.22);
+mob2.userData.name='Mobile angolare (braccio posteriore)'; LYR['sanitari'].push(mob2); scene.add(mob2); pickable.push(mob2);
+// Piano top L 650×650×30mm
+const top=at(mk(bx(0.660,0.030,0.660),new THREE.MeshPhongMaterial({color:0xF0ECE4,shininess:60})),-2.67,RFL+0.880,+0.97);
+top.userData.name='Piano mobile angolare'; LYR['sanitari'].push(top); scene.add(top);
+// Lavabo ceramica angolare
+const lav=new THREE.Group();
+lav.add(at(mk(bx(0.420,0.120,0.420),mCer),0,0.060,0));
+lav.add(at(mk(bx(0.400,0.010,0.400),new THREE.MeshPhongMaterial({color:0xF5F3EE})),0,0.125,0));
+lav.add(at(mk(bx(0.040,0.120,0.040),mInox),0,0.180,0));
+lav.add(at(mk(bx(0.010,0.060,0.060),mInox),0,0.260,-0.005));
+lav.add(at(mk(cy(0.022,0.090,8),new THREE.MeshPhongMaterial({color:0xCCCCCC})),0,0.020,0.060));
+reg(lav,'sanitari','Lavabo ceramica angolare',
+  'L:420×P:420mm·bacinella angolare\nCeramica sanitaria bianca\nRubinetto monocomando inox\nScarico clic-clac Ø40·sifone\nAF+AC Ø15·UNI EN 31')
+  .position.set(LAV_X,RFL+0.900,LAV_Z);
+// Specchio su parete posteriore
+{const mir2=grp(
+  at(mk(bx(0.550,0.700,0.014),mVetro),0,0,0),
+  at(mk(bx(0.570,0.720,0.010),new THREE.MeshPhongMaterial({color:0xA0AAAA,shininess:100})),0,0,+0.012));
+reg(mir2,'sanitari','Specchio lavabo angolare',
+  'L:550·H:700·Sp:14mm\nCornice alluminio anodizzato\nIP44·Cl.II')
+  .position.set(LAV_X,RFL+1.400,+1.15);}
+}
 
-// Specchio
-{const mir=grp(
-  at(mk(bx(0.600,0.800,0.014),mVetro),0,0,0),
-  at(mk(bx(0.620,0.820,0.010),new THREE.MeshPhongMaterial({color:0xA0AAAA,shininess:100})),0,0,-0.012));
-reg(mir,'sanitari','Specchio retro-illuminato IP44',
-  'L:600·H:800·Sp:14mm\nCornice alluminio anodizzato\nLED retroilluminazione 3000K·IP44·Cl.II')
-  .position.set(LAV_X,RFL+1.25,LAV_Z-0.012);}
+// Doccia e portasciugamani rimossi — bagnetto solo lavabo
 
-// Doccia
-{const dc=new THREE.Group();
-dc.add(at(mk(bx(0.80,0.025,0.80),new THREE.MeshPhongMaterial({color:0xE8E8E0})),0,0.0125,0));
-dc.add(at(mk(bx(0.006,1.00,0.80),mVetro),0.40,0.51,0));
-dc.add(at(mk(bx(0.80,1.00,0.006),mVetro),0,0.51,-0.40));
-dc.add(at(mk(cy(0.130,0.018,16),new THREE.MeshPhongMaterial({color:0xA0AAAA})),0,1.02,0));
-dc.add(at(mk(cy(0.010,0.35,8),mInox),-0.32,0.60,-0.38));
-reg(dc,'sanitari','Box doccia 80×80cm',
-  'L:800·P:800·H:1000mm\nPiatto ceramica antiscivolo\nVetro temperato 8mm\nSoffione 260×260mm inox\nAC+AF·Scarico Ø50mm')
-  .position.set(DOC_X,RFL,DOC_Z);}
+/* ──────────────────────────────────────────────
+   SAMSUNG 55" — PARETE POSTERIORE
+   55" 16:9 → 1216×685mm · wall-mount · parete Z=+SW/2
+   ────────────────────────────────────────────── */
+{
+const TV_W=1.216, TV_H=0.685, TV_D=0.065;
+const TV_X=0.0, TV_Y=RFL+1.50, TV_Z=SW/2-WT/2-TV_D/2;
+const mScreen=new THREE.MeshPhongMaterial({color:0x080808,emissive:0x001122,emissiveIntensity:0.4});
+const mBezel =new THREE.MeshPhongMaterial({color:0x101010,shininess:60});
+const mBrack =new THREE.MeshPhongMaterial({color:0x303030,shininess:40});
+const tvG=new THREE.Group();
+// Corpo + bezel
+tvG.add(at(mk(bx(TV_W+0.024,TV_H+0.024,TV_D),mBezel),0,0,0));
+// Schermo
+tvG.add(at(mk(bx(TV_W,TV_H,0.008),mScreen),0,0,TV_D/2+0.001));
+// Logo SAMSUNG — barra nera sotto schermo
+tvG.add(at(mk(bx(0.120,0.014,0.004),new THREE.MeshPhongMaterial({color:0x1A1A1A})),0,-(TV_H/2+0.010),TV_D/2));
+// Staffa a muro
+tvG.add(at(mk(bx(TV_W*0.6,0.040,0.080),mBrack),0,0,-TV_D/2-0.010));
+reg(tvG,'arredi','Samsung Smart TV 55" 4K UHD',
+  'Diag:55"·1216×685mm·16:9\nRisoluzione:3840×2160·4K UHD\nHDR10+·Smart TV\nThickness:65mm·wall-mount\nUSB/HDMI·wireless HDMI')
+  .position.set(TV_X,TV_Y,TV_Z);
+}
 
-// Portasciugamani
-{const pt=at(mk(bx(0.50,0.022,0.022),mInox),BX2-0.08,RFL+0.92,-SW/2+WT+0.05);
-pt.userData.name='Portasciugamani'; pt.userData.dims='L:500mm·Inox AISI304';
-LYR['sanitari'].push(pt); scene.add(pt); pickable.push(pt);}
+/* ──────────────────────────────────────────────
+   ARREDI — TAVOLO 1200×600 + 6 SEDIE
+   Centro area operativa (X≈0.80, Z=0)
+   ────────────────────────────────────────────── */
+{
+const mLegno = new THREE.MeshPhongMaterial({color:0xC8A96E,shininess:30});
+const mSedia = new THREE.MeshPhongMaterial({color:0xD4C090});
+const TX=0.80, TZ=0.0; // centro tavolo
+const TH=0.750;         // altezza piano tavolo
+
+// ── Tavolo 1200×600mm ──
+const tavG=new THREE.Group();
+// Piano
+tavG.add(at(mk(bx(1.200,0.030,0.600),mLegno),0,0,0));
+// 4 gambe 60×60mm h720
+[[0.52,0.25],[0.52,-0.25],[-0.52,0.25],[-0.52,-0.25]].forEach(([lx,lz])=>
+  tavG.add(at(mk(bx(0.060,0.720,0.060),mLegno),lx,-0.375,lz)));
+reg(tavG,'arredi','Tavolo riunioni 1200×600',
+  'L:1200·P:600·H:750mm\nPiano laminato rovere\nGambe acciaio verniciato')
+  .position.set(TX,RFL+TH,TZ);
+
+// ── Sedie (6) — funzione helper ──
+function mkSedia(sx,sz,ry){
+  const g=new THREE.Group();
+  // seduta
+  g.add(at(mk(bx(0.44,0.04,0.44),mSedia),0,0,0));
+  // schienale
+  g.add(at(mk(bx(0.44,0.38,0.04),mSedia),0,0.21,-0.22));
+  // 4 gambe
+  [[-0.18,-0.18],[0.18,-0.18],[-0.18,0.18],[0.18,0.18]].forEach(([gx,gz])=>
+    g.add(at(mk(bx(0.040,0.440,0.040),mSedia),gx,-0.240,gz)));
+  g.position.set(sx,RFL+0.470,sz);
+  g.rotation.y=ry;
+  reg(g,'arredi','Sedia operativa','Struttura acciaio·seduta imbottita·H:470mm');
+}
+
+// 2 lato anteriore (Z=-0.58)
+mkSedia(TX-0.32,-0.58, 0);
+mkSedia(TX+0.32,-0.58, 0);
+// 2 lato posteriore (Z=+0.58)
+mkSedia(TX-0.32, 0.58, Math.PI);
+mkSedia(TX+0.32, 0.58, Math.PI);
+// 1 testata sinistra
+mkSedia(TX-0.72, 0,    -Math.PI/2);
+// 1 testata destra
+mkSedia(TX+0.72, 0,     Math.PI/2);
+}
+
+/* ──────────────────────────────────────────────
+   HVAC SPLIT AUX 5.0kW
+   Unità interna su parete posteriore DX
+   Linea frigorifera Ø1/4"+Ø1/2" isolata visibile
+   ────────────────────────────────────────────── */
+{
+const mHvac=new THREE.MeshPhongMaterial({color:0xF0F0F0,shininess:50});
+const mHvacFr=new THREE.MeshPhongMaterial({color:0xE0E0E0,shininess:60});
+const HVAC=new THREE.Group();
+// Corpo unità interna 900×300×190mm
+HVAC.add(at(mk(bx(0.900,0.300,0.190),mHvac),0,0,0));
+// Griglia frontale (lamelle orizzontali)
+for(let i=0;i<6;i++){
+  HVAC.add(at(mk(bx(0.880,0.014,0.022),mHvacFr),0,-0.090+i*0.036,0.097));
+}
+// Aletta di distribuzione aria
+HVAC.add(at(mk(bx(0.860,0.010,0.060),mHvacFr),0,-0.100,0.088));
+// Display LED (banda sottile)
+HVAC.add(at(mk(bx(0.200,0.020,0.008),new THREE.MeshPhongMaterial({color:0x001133,emissive:0x0033AA,emissiveIntensity:0.7})),0.30,0.130,0.097));
+// Logo LED verde
+HVAC.add(at(mk(cy(0.010,0.008,8),new THREE.MeshPhongMaterial({color:0x00FF44,emissive:0x004400,emissiveIntensity:0.8})),0.40,0.130,0.097));
+reg(HVAC,'hvac','Unità interna HVAC split AUX 5.0kW',
+  'Marca: AUX (operativa fino a +50°C est.)\nMod.: AUX ASTW-H18/4R3H (o J-Smart 18000)\nCap. raffr.:5.0kW·Riscald.:5.8kW\nDim.:900×300×190mm\nCOP:4.5·EER:3.8·SCOP:4.6\nDisplay LED·Telecomando IR+Wi-Fi\nFunzionamento: −30°C÷+50°C\nAlimentazione:230V~50Hz·C16/2P\nFluido:R32·Linea frigo Ø1/4+Ø1/2"')
+  .position.set(1.00,SH-0.200,SW/2-0.100);
+
+// Linea frigorifera isolata (tubi da unità interna verso parete)
+const mFrigo=new THREE.MeshPhongMaterial({color:0x444440});
+// Fascio tubi (condensa+frigo) verticale sulla parete
+for(let y=SH-0.30;y>0.60;y-=0.020){} // tratto verticale
+LYR['hvac'].push(HVAC); // già registrata con reg()
+
+// ── Unità esterna AUX — parete posteriore (Z=+SW/2), alto DX ──
+{
+const mOutB=new THREE.MeshPhongMaterial({color:0xD8D8D0,shininess:30});
+const mOutG=new THREE.MeshPhongMaterial({color:0x404440});
+const UE=new THREE.Group();
+// Corpo unità esterna 900×650×330mm
+UE.add(at(mk(bx(0.900,0.650,0.330),mOutB),0,0,0));
+// Griglia frontale (lato lungo — lamelle verticali)
+for(let i=0;i<12;i++){
+  UE.add(at(mk(bx(0.010,0.620,0.060),mOutG),-0.420+i*0.076,0,0.170));
+}
+// Ventola (cerchio grigliato)
+UE.add(at(mk(cy(0.270,0.020,24),mOutG),0.15,0.080,0.170));
+UE.add(at(mk(cy(0.220,0.005,12),new THREE.MeshPhongMaterial({color:0x606060})),0.15,0.080,0.182));
+// Pannello comandi (lato)
+UE.add(at(mk(bx(0.060,0.060,0.330),new THREE.MeshPhongMaterial({color:0xC8C8C0})),0.455,0.240,0));
+// Mensola di supporto
+UE.add(at(mk(bx(0.920,0.020,0.200),new THREE.MeshPhongMaterial({color:0x808080})),0,-0.340,0.060));
+reg(UE,'hvac','Unità esterna AUX split 5.0kW (retro shelter)',
+  'Marca: AUX\nMod.: AUX AM-H18/4R3HA\nDim.:900×650×330mm\nCap. raffr.:5.0kW·Riscald.:5.8kW\nFunzionamento: −30°C÷+50°C est.\nFluido: R32 (GWP=675)\nRumore: 52dB(A)\nPeso: 38kg·Mensola a parete\nLinea frigo 3m inclusa')
+  .position.set(1.80, SW/2+0.340, SW/2+0.175);
+
+// Canalina verticale porta-tubi (da u.interna a parete post.)
+const canalV=at(mk(bx(0.065,1.300,0.040),mFrigo),SL/2-0.130,SH-1.00,SW/2-0.080);
+canalV.userData.name='Canalina linea frigorifera'; LYR['hvac'].push(canalV); scene.add(canalV); pickable.push(canalV);
+// Passaparete
+const pass=new THREE.Group();
+pass.add(at(mk(cy(0.040,0.090,12),mFrigo),0,0,0));
+pass.rotation.x=Math.PI/2;
+pass.position.set(SL/2-0.130,SH-0.200,SW/2-0.040);
+LYR['hvac'].push(pass); scene.add(pass);
+}
+}
+
+/* ──────────────────────────────────────────────
+   ANTINCENDIO
+   Centrale + rilevatori + pulsante manuale + loop
+   ────────────────────────────────────────────── */
+{
+const mAntB=new THREE.MeshPhongMaterial({color:0xEEEEEE});
+const mAntR=new THREE.MeshPhongMaterial({color:0xCC1111});
+const mAntG=new THREE.MeshPhongMaterial({color:0x1A2A3A});
+
+// Centrale Honeywell Galaxy Flex — parete DX interna (parete posteriore, lato dx)
+const cen=new THREE.Group();
+cen.add(at(mk(bx(0.380,0.320,0.120),mAntB),0,0,0));
+// Sportello
+cen.add(at(mk(bx(0.370,0.310,0.008),new THREE.MeshPhongMaterial({color:0xDDDDCC})),0,0,0.064));
+// Display LCD (rettangolo scuro)
+cen.add(at(mk(bx(0.200,0.080,0.005),mAntG),0,0.060,0.066));
+// Tastiera (piccoli tasti)
+for(let r=0;r<3;r++) for(let c=0;c<4;c++){
+  cen.add(at(mk(bx(0.030,0.022,0.005),new THREE.MeshPhongMaterial({color:0x333333})),-0.065+c*0.044,-0.050+r*0.030,0.066));
+}
+// LED stato (3 LED)
+[0xCC1111,0xFFAA00,0x00CC44].forEach((col,i)=>{
+  cen.add(at(mk(cy(0.008,0.006,8),new THREE.MeshPhongMaterial({color:col,emissive:col,emissiveIntensity:0.5})),0.14-i*0.018,-0.110,0.066));
+});
+reg(cen,'antinc','Centrale antincendio Honeywell Galaxy Flex',
+  'Mod.: Honeywell Galaxy Flex\nZone: 8 loop · EN 54-2/4\nDisplay LCD 4×20 char\nTastiera 12 tasti\nBatteria backup 7.2Ah\nUscite: sirena+flash+rel.esterno\nIP30·EN 54-2:1997+A1:2006')
+  .position.set(2.20,RFL+1.30,SW/2-WT-0.070);
+
+// Rilevatore fumo ottico a soffitto (3 pz)
+[[-1.5,0.0],[0.5,0.0],[2.0,0.0]].forEach(([rx,rz],i)=>{
+  const det=new THREE.Group();
+  det.add(at(mk(cy(0.060,0.040,20),mAntB),0,0,0));
+  det.add(at(mk(cy(0.050,0.012,20),new THREE.MeshPhongMaterial({color:0xDDDDCC})),0,-0.025,0));
+  det.add(at(mk(cy(0.008,0.006,8),new THREE.MeshPhongMaterial({color:0xCC1111,emissive:0x440000,emissiveIntensity:0.8})),0,-0.022,0.040));
+  reg(det,'antinc',`Rilevatore fumo ottico n.${i+1}`,
+    'Mod.: Hochiki ESP-E (o equiv.)\nTipo: ottico analogico\nEN 54-7·Raggio 7.5m\nLED rosso lampeggiante in allarme')
+    .position.set(rx,SH-0.030,rz);
+});
+
+// Pulsante manuale rosso lato porta — H=1400mm
+{const pmr=new THREE.Group();
+pmr.add(at(mk(bx(0.100,0.120,0.060),mAntR),0,0,0));
+pmr.add(at(mk(bx(0.088,0.108,0.010),new THREE.MeshPhongMaterial({color:0xEE2200})),0,0,0.035));
+pmr.add(at(mk(bx(0.065,0.065,0.008),new THREE.MeshPhongMaterial({color:0xFFDD00})),0,-0.010,0.038));
+reg(pmr,'antinc','Pulsante manuale allarme (PMA)',
+  'Tipo: rottura vetro/resettabile\nColore: RAL 3000 rosso\nEN 54-11·H inst:1400mm\nCablaggi: cavo loop 2×0.8mm²J-H(St)H FE180')
+  .position.set(0.75,1.400,-SW/2+WT+0.035);}
+
+// Cavo loop antincendio (visibile a soffitto, percorso perimetrale)
+{const mLoop=new THREE.MeshPhongMaterial({color:0xFF6600});
+const loopSegs=[
+  [-SL/2+0.12,SH-0.12,-SW/2+0.12, SL/2-0.12,SH-0.12,-SW/2+0.12],
+  [SL/2-0.12,SH-0.12,-SW/2+0.12,  SL/2-0.12,SH-0.12, SW/2-0.12],
+  [SL/2-0.12,SH-0.12, SW/2-0.12, -SL/2+0.12,SH-0.12, SW/2-0.12],
+  [-SL/2+0.12,SH-0.12,SW/2-0.12, -SL/2+0.12,SH-0.12,-SW/2+0.12],
+];
+loopSegs.forEach(([x1,y1,z1,x2,y2,z2])=>{
+  const seg=tube(x1,y1,z1,x2,y2,z2,0.008,mLoop);
+  seg.userData.name='Cavo loop antincendio J-H(St)H FE180';
+  seg.userData.dims='2×0.8mm²·schermato·arancione\nEN 50200 FE180 ≥ 90min';
+  LYR['antinc'].push(seg); scene.add(seg); pickable.push(seg);
+});}
+}
+
+/* ──────────────────────────────────────────────
+   ILLUMINAZIONE — 3 plafoniere LED + 1 emergenza
+   Canaline portacavi a soffitto
+   ────────────────────────────────────────────── */
+{
+const mLamC=new THREE.MeshPhongMaterial({color:0xE8E8E0,shininess:30});
+const mLamL=new THREE.MeshPhongMaterial({color:0xFFFF88,emissive:0x888800,emissiveIntensity:0.60});
+const mEmLED=new THREE.MeshPhongMaterial({color:0x00DD44,emissive:0x004400,emissiveIntensity:0.8});
+
+// 3 plafoniere LED lineari 36W IP65 — 600×80×75mm
+[[-1.8,0.0],[0.5,0.0],[2.2,0.0]].forEach(([lx,lz],i)=>{
+  const pl=new THREE.Group();
+  pl.add(at(mk(bx(0.600,0.075,0.080),mLamC),0,0,0));
+  pl.add(at(mk(bx(0.590,0.040,0.076),mLamL),0,-0.020,0));
+  reg(pl,'illumin',`Plafoniera LED IP65 n.${i+1}/3`,
+    '36W·3600lm·4000K·CRI>80\nDim:600×80×75mm·IP65·IK08\nClasse I·230Vac·Circuito C2-Luce')
+    .position.set(lx,SH-0.040,lz);
+});
+
+// Luce emergenza SA con pittogramma EXIT — sopra porta scorrevole
+{const em=new THREE.Group();
+em.add(at(mk(bx(0.310,0.110,0.060),mLamC),0,0,0));
+em.add(at(mk(bx(0.295,0.090,0.010),new THREE.MeshPhongMaterial({color:0x006600})),0,0,0.033));
+// Pittogramma stilizzato (persona che corre)
+em.add(at(mk(bx(0.240,0.060,0.006),mEmLED),0,0,0.036));
+em.add(at(mk(bx(0.040,0.100,0.004),mEmLED),0,0.008,0.037));
+reg(em,'illumin','Luce emergenza SA (sopra porta)',
+  'Tipo: autoalimentata SA\n3h autonomia·EN 1838\n3W LED·250lm·verde\nPittogramma uscita sicurezza\nTest automatico settimanale\nIP42·Cl.II·H inst.: 2200mm')
+  .position.set(0.75,2.220,-SW/2+WT+0.033);}
+
+// Canalina portacavi a soffitto — percorso principale
+{const mCan=new THREE.MeshPhongMaterial({color:0x888890});
+// Dorsale principale
+const canMain=at(mk(bx(SL-0.20,0.060,0.040),mCan),0,SH-0.030,-SW/2+0.160);
+canMain.userData.name='Canalina portacavi soffitto (principale)';
+canMain.userData.dims='60×40mm PVC grigio RAL 7037\nCavi luce+prese+emergenza';
+LYR['illumin'].push(canMain); scene.add(canMain); pickable.push(canMain);
+// Derivazione trasversale
+const canTrasv=at(mk(bx(0.040,0.060,SW-0.20),mCan),-1.80,SH-0.030,0);
+canTrasv.userData.name='Canalina trasversale luci';
+canTrasv.userData.dims='40×40mm PVC·derivazione verso plafoniere';
+LYR['illumin'].push(canTrasv); scene.add(canTrasv);}
+
+// 5 prese Schuko aggiuntive (dietro divano, tavolo, lavabo)
+{const mSku=new THREE.MeshPhongMaterial({color:0xEEEEDD});
+const presas=[
+  [-0.5, SW/2-WT-0.030,'Presa Schuko (parete post. SX)'],
+  [ 0.5, SW/2-WT-0.030,'Presa Schuko (parete post. centro)'],
+  [ 1.5,-SW/2+WT+0.030,'Presa Schuko (parete front. DX)'],
+  [-2.5,-SW/2+WT+0.030,'Presa Schuko (bagno — vicino lavabo ang.)'],
+  [ 2.5, SW/2-WT-0.030,'Presa Schuko (parete post. DX)'],
+];
+presas.forEach(([sx,sz,nm])=>{
+  const sk=at(mk(bx(0.086,0.086,0.044),mSku),sx,RFL+0.300,sz);
+  sk.userData.name=nm; sk.userData.dims='2P+T 16A·IP55·H:300mm·Bticino Magic';
+  LYR['illumin'].push(sk); scene.add(sk); pickable.push(sk);
+});}
+}
 
 /* ──────────────────────────────────────────────
    VISTE PRESET
@@ -1864,14 +2188,18 @@ LYR['sanitari'].push(pt); scene.add(pt); pickable.push(pt);}
 window.sv=function(v){
   document.querySelectorAll('#controls button').forEach(b=>b.classList.remove('active'));
   switch(v){
-    case 'iso':   camera.position.set(10,8,12);  orb.target.set(0,1.3,0);    break;
-    case 'pianta':camera.position.set(0,13,0);   orb.target.set(0,0,0);      break;
-    case 'front': camera.position.set(0,2,-13);  orb.target.set(0,1.3,0);    break;
-    case 'rear':  camera.position.set(0,2,13);   orb.target.set(0,1.3,0);    break;
-    case 'scala': camera.position.set(8,5,7);    orb.target.set(3.5,2,1.5);  break;
+    case 'iso':   camera.position.set(-9,7,-11); orb.target.set(0,1.3,0);    break; // SX=SX, DX=DX
+    case 'pianta':camera.position.set(0,15,0);   orb.target.set(0,0,0);      break;
+    case 'front': camera.position.set(0,3,-14);  orb.target.set(0,1.3,0);    break; // fronte vetrato
+    case 'rear':  camera.position.set(0,3,14);   orb.target.set(0,1.3,0);    break; // retro + u.est. HVAC
+    case 'scala': camera.position.set(11,5,-4);  orb.target.set(-5,1.5,0);   break; // scala SX, esce verso -X
     case 'bagno': camera.position.set(-4.5,2.5,0);orb.target.set(-2.2,1.2,0);break;
     case 'qe':    camera.position.set(3.5,2,-4); orb.target.set(1.8,1.5,-1); break;
-    case 'pipe':  camera.position.set(0,0.5,7);  orb.target.set(0,0,0);      break;
+    case 'pipe':  camera.position.set(0,0.5,-7); orb.target.set(0,0,0);      break;
+    case 'int_f': camera.position.set(0,1.70,0.70);   orb.target.set(-1.0,1.30,-1.20); break; // dentro → fronte finestre
+    case 'int_q': camera.position.set(-0.5,1.70,0);   orb.target.set(3.0,1.30,0);     break; // dentro → parete DX QP+HVAC
+    case 'int_lav':camera.position.set(+1.0,1.60,+0.2);orb.target.set(-2.8,1.0,+1.0); break; // dentro → lavabo angolo SX (X=-2.67, fondo)
+    case 'int_tv': camera.position.set(0,1.60,-0.5);   orb.target.set(0,1.5,1.25);    break; // dentro → Samsung parete post.
   }
   camera.lookAt(orb.target); orb.update();
   const b=document.getElementById('b-'+v);
@@ -1899,6 +2227,9 @@ canvas.addEventListener('mouseup',e=>{
 });
 
 window.closePanel=function(){document.getElementById('info-panel').classList.add('hidden');};
+window.showFascicolo=function(show=true){
+  document.getElementById('fascicolo').style.display=show?'block':'none';
+};
 
 /* ──────────────────────────────────────────────
    RESIZE / RENDER
@@ -1909,8 +2240,88 @@ window.addEventListener('resize',()=>{
   renderer.setSize(window.innerWidth,window.innerHeight);
 });
 setTimeout(()=>document.getElementById('hint').style.opacity='0',5000);
-(function animate(){requestAnimationFrame(animate);orb.update();renderer.render(scene,camera);})();
+
+/* ──────────────────────────────────────────────
+   QUOTE DIMENSIONALI — overlay canvas 2D
+   Toggle con pulsante "Quote"
+   ────────────────────────────────────────────── */
+const qCanvas=document.createElement('canvas');
+qCanvas.style.cssText='position:fixed;top:0;left:0;pointer-events:none;z-index:5';
+qCanvas.width=window.innerWidth; qCanvas.height=window.innerHeight;
+document.body.appendChild(qCanvas);
+const qCtx=qCanvas.getContext('2d');
+let showQuote=false;
+
+function project2D(x,y,z){
+  const v=new THREE.Vector3(x,y,z);
+  v.project(camera);
+  return {
+    x:(v.x+1)/2*window.innerWidth,
+    y:(-v.y+1)/2*window.innerHeight
+  };
+}
+
+function drawQuote(x1,y1,z1,x2,y2,z2,label,side='top'){
+  const p1=project2D(x1,y1,z1);
+  const p2=project2D(x2,y2,z2);
+  const mx=(p1.x+p2.x)/2, my=(p1.y+p2.y)/2;
+  qCtx.strokeStyle='#0044AA'; qCtx.lineWidth=1.2; qCtx.setLineDash([4,3]);
+  qCtx.beginPath(); qCtx.moveTo(p1.x,p1.y); qCtx.lineTo(p2.x,p2.y); qCtx.stroke();
+  qCtx.setLineDash([]);
+  // tick ends
+  [p1,p2].forEach(p=>{
+    qCtx.beginPath(); qCtx.moveTo(p.x-4,p.y-4); qCtx.lineTo(p.x+4,p.y+4); qCtx.stroke();
+    qCtx.beginPath(); qCtx.moveTo(p.x+4,p.y-4); qCtx.lineTo(p.x-4,p.y+4); qCtx.stroke();
+  });
+  // label
+  qCtx.font='bold 11px Segoe UI,Arial';
+  qCtx.fillStyle='rgba(255,255,255,0.85)';
+  qCtx.fillRect(mx-24,my-9,48,14);
+  qCtx.fillStyle='#003399';
+  qCtx.textAlign='center'; qCtx.textBaseline='middle';
+  qCtx.fillText(label,mx,my);
+}
+
+function renderQuote(){
+  qCtx.clearRect(0,0,qCanvas.width,qCanvas.height);
+  if(!showQuote)return;
+  // Lunghezza 6000mm
+  drawQuote(-3,SH+0.5,-SW/2, 3,SH+0.5,-SW/2,'6000 mm');
+  // Larghezza 2500mm
+  drawQuote(SL/2+0.4,SH+0.5,-SW/2, SL/2+0.4,SH+0.5,SW/2,'2500 mm');
+  // Altezza 2591mm
+  drawQuote(SL/2+0.6,0,-SW/2, SL/2+0.6,SH,-SW/2,'2591 mm');
+  // Altezza tetto calpestabile
+  drawQuote(SL/2+0.6,0,SW/2, SL/2+0.6,SH+0.082,SW/2,'2673 mm');
+  // Fronte: finestrone 3000mm
+  drawQuote(-3,WIN_SILL-0.18,-SW/2-0.1, 0,WIN_SILL-0.18,-SW/2-0.1,'3000');
+  // Fronte: porta 1500mm
+  drawQuote(0,WIN_SILL-0.18,-SW/2-0.1, 1.5,WIN_SILL-0.18,-SW/2-0.1,'1500');
+  // Fronte: pannello cieco 1500mm
+  drawQuote(1.5,WIN_SILL-0.18,-SW/2-0.1, 3,WIN_SILL-0.18,-SW/2-0.1,'1500');
+  // Altezza finestra 1800mm
+  drawQuote(-3.2,WIN_SILL,-SW/2, -3.2,WIN_TOP,-SW/2,'1800 h');
+  // Scala: lunghezza orizzontale
+  drawQuote(-SL/2-14*0.270,0.15,0, -SL/2,0.15,0,'3780 mm');
+}
+
+window.addEventListener('resize',()=>{
+  qCanvas.width=window.innerWidth; qCanvas.height=window.innerHeight;
+});
+
+window.toggleQuote=function(){
+  showQuote=!showQuote;
+  document.getElementById('btn-quote').classList.toggle('active',showQuote);
+};
+
+(function animate(){
+  requestAnimationFrame(animate);
+  orb.update();
+  renderer.render(scene,camera);
+  renderQuote();
+})();
 </script>
 
 </body>
 </html>
+
