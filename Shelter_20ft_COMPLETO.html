@@ -1317,7 +1317,7 @@ renderer.setClearColor(0xFFFFFF,1);
 
 const scene  = new THREE.Scene();
 const camera = new THREE.PerspectiveCamera(43, window.innerWidth/window.innerHeight, 0.05, 200);
-camera.position.set(10, 8, 12);
+camera.position.set(10, 8, -12);
 
 const orb = new THREE.OrbitControls(camera, renderer.domElement);
 orb.target.set(0,1.3,0);
@@ -1461,7 +1461,7 @@ const YDUCT=0.100; // asse cavidotti elettrici
 // Bagno: X=-3.0 ÷ -1.4 (1600mm), piena larghezza
 const BX1=-3.0, BX2=-1.40;
 const WC_X=-2.40, WC_Z=+0.55;   // coordinate mantenute per riferimenti elettrico
-const LAV_X=-2.67, LAV_Z=+0.97; // lavabo angolo SX 3D (parete X=-3, fondo Z=+1.25)
+const LAV_X=+2.67, LAV_Z=+0.97; // lavabo angolo SX visivo (sinistra schermo vista frontale)
 const DOC_X=-2.60, DOC_Z=-0.30; // mantenute per riferimenti elettrico
 const DOOR_Z=-0.30;
 // Scala (lato corto destro)
@@ -1572,17 +1572,12 @@ balFront.add(bRail(0,RY+PH,-SW/2+RS/2,SL-0.1,RS));
 balFront.add(bRail(0,RY+PH*.55,-SW/2+RS/2,SL-0.1,RS));
 reg(balFront,'tetto','Balaustra frontale','Montanti 50×50·Correnti Ø38mm·H:1000mm·S275');
 
-// Balaustra SX con gap centrale per accesso scala (gap Z:-0.60÷+0.60)
+// Balaustra SX completa — scala sul lato DX
 const balSx=new THREE.Group();
-balSx.add(bPosts('z',-SW/2+0.05,-0.60,-SL/2+PS/2));
-balSx.add(bRail(-SL/2+RS/2,RY+PH,(-SW/2-0.60)/2,RS,(SW/2-0.60-0.1)));
-balSx.add(bRail(-SL/2+RS/2,RY+PH*.55,(-SW/2-0.60)/2,RS,(SW/2-0.60-0.1)));
-const balSx2=new THREE.Group();
-balSx2.add(bPosts('z',0.60,SW/2-0.05,-SL/2+PS/2));
-balSx2.add(bRail(-SL/2+RS/2,RY+PH,(0.60+SW/2)/2,RS,(SW/2-0.60-0.1)));
-balSx2.add(bRail(-SL/2+RS/2,RY+PH*.55,(0.60+SW/2)/2,RS,(SW/2-0.60-0.1)));
-reg(balSx,'tetto','Balaustra laterale sinistra (ant., gap scala)','Gap Z=±600mm per accesso scala');
-reg(balSx2,'tetto','Balaustra laterale sinistra (post., gap scala)','Gap Z=±600mm per accesso scala');
+balSx.add(bPosts('z',-SW/2+0.05,SW/2-0.05,-SL/2+PS/2));
+balSx.add(bRail(-SL/2+RS/2,RY+PH,0,RS,SW-0.1));
+balSx.add(bRail(-SL/2+RS/2,RY+PH*.55,0,RS,SW-0.1));
+reg(balSx,'tetto','Balaustra laterale sinistra (completa)','Continua — scala sul lato DX');
 
 const balRear=new THREE.Group();
 balRear.add(bPosts('x',-SL/2+0.05,SL/2-0.05,SW/2-PS/2));
@@ -1590,12 +1585,17 @@ balRear.add(bRail(0,RY+PH,SW/2-RS/2,SL-0.1,RS));
 balRear.add(bRail(0,RY+PH*.55,SW/2-RS/2,SL-0.1,RS));
 reg(balRear,'tetto','Balaustra posteriore (completa)','Balaustra continua lato posteriore');
 
-// Balaustra DX completa — scala sul lato SX opposto
+// Balaustra DX con gap centrale per accesso scala (gap Z:-0.60÷+0.60)
 const balDx=new THREE.Group();
-balDx.add(bPosts('z',-SW/2+0.05,SW/2-0.05,SL/2-PS/2));
-balDx.add(bRail(SL/2-RS/2,RY+PH,0,RS,SW-0.1));
-balDx.add(bRail(SL/2-RS/2,RY+PH*.55,0,RS,SW-0.1));
-reg(balDx,'tetto','Balaustra laterale destra (completa)','Continua — scala sul lato SX opposto');
+balDx.add(bPosts('z',-SW/2+0.05,-0.60,SL/2-PS/2));
+balDx.add(bRail(SL/2-RS/2,RY+PH,(-SW/2-0.60)/2,RS,(SW/2-0.60-0.1)));
+balDx.add(bRail(SL/2-RS/2,RY+PH*.55,(-SW/2-0.60)/2,RS,(SW/2-0.60-0.1)));
+const balDx2=new THREE.Group();
+balDx2.add(bPosts('z',0.60,SW/2-0.05,SL/2-PS/2));
+balDx2.add(bRail(SL/2-RS/2,RY+PH,(0.60+SW/2)/2,RS,(SW/2-0.60-0.1)));
+balDx2.add(bRail(SL/2-RS/2,RY+PH*.55,(0.60+SW/2)/2,RS,(SW/2-0.60-0.1)));
+reg(balDx,'tetto','Balaustra laterale destra (ant., gap scala)','Gap Z=±600mm per accesso scala');
+reg(balDx2,'tetto','Balaustra laterale destra (post., gap scala)','Gap Z=±600mm per accesso scala');
 
 /* ──────────────────────────────────────────────
    SCALA METALLICA DRITTA — PARETE CORTA SX
@@ -1610,13 +1610,13 @@ const PED_SC=0.270;             // pedata 270mm
 const STW_SC=1.000;             // larghezza scala
 const TREAD_SC=0.030;           // spessore pedana graticciata
 const UPN_H_SC=0.200, UPN_W_SC=0.010;
-const X_WALL=-SL/2;             // -3.0 — parete SX
-const X_BOT=X_WALL-N_SC*PED_SC; // -3.0 - 3.78 = -6.78 — piede scala (esce verso -X)
-const SC_ZC=0.0;               // centrata sulla parete SX
+const X_WALL=+SL/2;             // +3.0 — parete DX (visivamente SX da vista frontale)
+const X_BOT=X_WALL+N_SC*PED_SC; // +3.0 + 3.78 = +6.78 — piede scala (esce verso +X)
+const SC_ZC=0.0;               // centrata sulla parete DX
 
 // ── Gradini (solo pedane graticciato, no alzate) ──
 for(let i=0;i<N_SC;i++){
-  const xc=X_BOT+(i+0.5)*PED_SC;
+  const xc=X_BOT-(i+0.5)*PED_SC;
   const yt=(i+1)*RIS_SC;
   scG.add(at(mk(bx(PED_SC,TREAD_SC,STW_SC),mGrate),xc,yt-TREAD_SC/2,SC_ZC));
 }
@@ -1630,17 +1630,17 @@ const CR=0.022;
 function crb(x1,y1,z1,x2,y2,z2){scG.add(tube(x1,y1,z1,x2,y2,z2,CR,mInox));}
 [-1,1].forEach(s=>{
   const ZH=SC_ZC+s*(STW_SC/2+0.05);
-  crb(X_BOT+PED_SC,RIS_SC+0.90,ZH, X_WALL,SH+0.082+0.90,ZH);
+  crb(X_BOT-PED_SC,RIS_SC+0.90,ZH, X_WALL,SH+0.082+0.90,ZH);
   // palo verticale piede scala — termina a terra
-  scG.add(at(mk(cy(CR,RIS_SC+0.90,8),mInox),X_BOT+PED_SC,(RIS_SC+0.90)/2,ZH));
+  scG.add(at(mk(cy(CR,RIS_SC+0.90,8),mInox),X_BOT-PED_SC,(RIS_SC+0.90)/2,ZH));
 });
 
 // ── Basette di ancoraggio a terra ──
 [-STW_SC/2-0.02,STW_SC/2+0.02].forEach(pz=>
   scG.add(at(mk(bx(0.180,0.014,0.180),mMetal),X_BOT,-0.007,SC_ZC+pz)));  // basette piede
 
-reg(scG,'scala','Scala metallica dritta — parete SX',
-  `${N_SC} gradini · pedana graticciata 30mm\nCorrimano tubo inox Ø42mm h=900mm\nPedata:${(PED_SC*1000).toFixed(0)}mm·Alzata:${(RIS_SC*1000).toFixed(0)}mm\nLarghezza netta:1000mm\nInclinazione:${(SC_ANG*180/Math.PI).toFixed(1)}°\nSalita da SX (−X) guardando il container`);
+reg(scG,'scala','Scala metallica dritta — parete DX (SX visivo)',
+  `${N_SC} gradini · pedana graticciata 30mm\nCorrimano tubo inox Ø42mm h=900mm\nPedata:${(PED_SC*1000).toFixed(0)}mm·Alzata:${(RIS_SC*1000).toFixed(0)}mm\nLarghezza netta:1000mm\nInclinazione:${(SC_ANG*180/Math.PI).toFixed(1)}°\nSalita da DX (+X) — sinistra visiva da fronte`);
 }
 
 /* ──────────────────────────────────────────────
@@ -1736,18 +1736,18 @@ function rc(x,y,z,r,mat,nm){
   const t=raccord(x,y,z,r,mat); t.userData.name=nm||'Raccordo';
   IDR.add(t); pickable.push(t); return t;
 }
-// ── Acqua Fredda — solo lavabo (LAV_X=-2.67, LAV_Z=+0.97) ──
-tb(-SL/2+WT,0.40,LAV_Z, -SL/2+WT,YPIPE,LAV_Z, RAF,mAF,'Colonna AF ingresso','Ø20mm PP-R PN10 BLU\nIngresso da rete esterna·max 6bar');
-rc(-SL/2+WT,YPIPE,LAV_Z, RAF,mRacc,'Raccordo T AF');
-tb(-SL/2+WT,YPIPE,LAV_Z, LAV_X,YPIPE,LAV_Z, RAF,mAF,'Derivazione AF→Lavabo','Ø20mm PP-R sotto pavimento');
+// ── Acqua Fredda — solo lavabo (LAV_X=+2.67, LAV_Z=+0.97) ──
+tb(SL/2-WT,0.40,LAV_Z, SL/2-WT,YPIPE,LAV_Z, RAF,mAF,'Colonna AF ingresso','Ø20mm PP-R PN10 BLU\nIngresso da rete esterna·max 6bar');
+rc(SL/2-WT,YPIPE,LAV_Z, RAF,mRacc,'Raccordo T AF');
+tb(SL/2-WT,YPIPE,LAV_Z, LAV_X,YPIPE,LAV_Z, RAF,mAF,'Derivazione AF→Lavabo','Ø20mm PP-R sotto pavimento');
 tb(LAV_X,YPIPE,LAV_Z, LAV_X,RFL+0.55,LAV_Z, RAF,mAF,'Risalita AF Lavabo','Ø20mm PP-R→rubinetteria');
-// ── Acqua Calda — da Ariston (X=-2.88, Z=+0.90) ──
-tb(-2.88,RFL+1.00,+0.90, -2.88,YPIPE,+0.90, RAC,mAC,'Discesa AC Ariston','Ø20mm PP-R ROSSO');
-tb(-2.88,YPIPE,+0.90, LAV_X,YPIPE,LAV_Z, RAC,mAC,'Derivazione AC→Lavabo','Ø20mm PP-R');
+// ── Acqua Calda — da Ariston (X=+2.88, Z=+0.90) ──
+tb(+2.88,RFL+1.00,+0.90, +2.88,YPIPE,+0.90, RAC,mAC,'Discesa AC Ariston','Ø20mm PP-R ROSSO');
+tb(+2.88,YPIPE,+0.90, LAV_X,YPIPE,LAV_Z, RAC,mAC,'Derivazione AC→Lavabo','Ø20mm PP-R');
 tb(LAV_X,YPIPE,LAV_Z, LAV_X,RFL+0.55,LAV_Z+0.02, RAC,mAC,'Risalita AC Lavabo','Ø20mm PP-R→rubinetteria');
 // ── Scarico lavabo Ø40 ──
 tb(LAV_X,RFL+0.10,LAV_Z, LAV_X,-0.015,LAV_Z, RSCR,mScar,'Scarico lavabo Ø40','PVC bianco Ø40·sifone bottiglietta');
-tb(LAV_X,-0.015,LAV_Z, -SL/2+WT,-0.015,LAV_Z, RSCR,mScar,'Collettore scarico','Ø40 PVC·pendenza 2%·uscita pozzetto');
+tb(LAV_X,-0.015,LAV_Z, SL/2-WT,-0.015,LAV_Z, RSCR,mScar,'Collettore scarico','Ø40 PVC·pendenza 2%·uscita pozzetto');
 LYR['idrico'].push(IDR); scene.add(IDR);
 }
 
@@ -1886,20 +1886,20 @@ arist.add(at(mk(cy(0.012,0.040,8),new THREE.MeshPhongMaterial({color:0x2266EE}))
 arist.add(at(mk(cy(0.012,0.040,8),new THREE.MeshPhongMaterial({color:0xEE3322})),0.06,-0.240,0.050));
 reg(arist,'sanitari','Ariston Fast Evo 11 — Scaldabagno istantaneo',
   'Modello: Ariston Fast Evo 11\nPotenza:11kW·230/400V·Elettronico\nDim:276×445×185mm·a parete\nPortata:5L/min·ERP:A+\nAntilegionella·Display LED\nAF+AC Ø15·dentro mobile angolare')
-  .position.set(-2.88,RFL+1.00,+0.90);}
+  .position.set(+2.88,RFL+1.00,+0.90);}
 
 // WC rimosso — bagnetto solo lavabo
 
 // Lavabo angolare + mobile a L 650×650 — angolo SX-fondo (parete X=-3, parete Z=+1.25)
 {
 // Mobile a L — braccio lungo parete sinistra (X=-3), appoggiato a parete posteriore
-const mob1=at(mk(bx(0.660,0.850,0.060),new THREE.MeshPhongMaterial({color:0xE8E0D0})),-2.97,RFL+0.850/2,+0.95);
+const mob1=at(mk(bx(0.660,0.850,0.060),new THREE.MeshPhongMaterial({color:0xE8E0D0})),+2.97,RFL+0.850/2,+0.95);
 mob1.userData.name='Mobile angolare (braccio SX)'; LYR['sanitari'].push(mob1); scene.add(mob1); pickable.push(mob1);
-// Mobile a L — braccio lungo parete posteriore (Z=+1.25), appoggiato a parete sinistra
-const mob2=at(mk(bx(0.060,0.850,0.630),new THREE.MeshPhongMaterial({color:0xE8E0D0})),-2.65,RFL+0.850/2,+1.22);
+// Mobile a L — braccio lungo parete posteriore (Z=+1.25), appoggiato a parete destra
+const mob2=at(mk(bx(0.060,0.850,0.630),new THREE.MeshPhongMaterial({color:0xE8E0D0})),+2.65,RFL+0.850/2,+1.22);
 mob2.userData.name='Mobile angolare (braccio posteriore)'; LYR['sanitari'].push(mob2); scene.add(mob2); pickable.push(mob2);
 // Piano top L 650×650×30mm
-const top=at(mk(bx(0.660,0.030,0.660),new THREE.MeshPhongMaterial({color:0xF0ECE4,shininess:60})),-2.67,RFL+0.880,+0.97);
+const top=at(mk(bx(0.660,0.030,0.660),new THREE.MeshPhongMaterial({color:0xF0ECE4,shininess:60})),+2.67,RFL+0.880,+0.97);
 top.userData.name='Piano mobile angolare'; LYR['sanitari'].push(top); scene.add(top);
 // Lavabo ceramica angolare
 const lav=new THREE.Group();
@@ -1988,10 +1988,10 @@ mkSedia(TX+0.32,-0.58, 0);
 // 2 lato posteriore (Z=+0.58)
 mkSedia(TX-0.32, 0.58, Math.PI);
 mkSedia(TX+0.32, 0.58, Math.PI);
-// 1 testata sinistra
-mkSedia(TX-0.72, 0,    -Math.PI/2);
-// 1 testata destra
-mkSedia(TX+0.72, 0,     Math.PI/2);
+// 1 testata sinistra — schienale verso -X, persona guarda verso tavolo (+X)
+mkSedia(TX-0.72, 0,     Math.PI/2);
+// 1 testata destra — schienale verso +X, persona guarda verso tavolo (-X)
+mkSedia(TX+0.72, 0,    -Math.PI/2);
 }
 
 /* ──────────────────────────────────────────────
@@ -2188,17 +2188,17 @@ presas.forEach(([sx,sz,nm])=>{
 window.sv=function(v){
   document.querySelectorAll('#controls button').forEach(b=>b.classList.remove('active'));
   switch(v){
-    case 'iso':   camera.position.set(9,7,11);   orb.target.set(0,1.3,0);    break; // SX=sinistra schermo, DX=destra schermo
+    case 'iso':   camera.position.set(9,7,-11);  orb.target.set(0,1.3,0);    break; // vista frontale: sinistra schermo=DX 3D=SX visivo
     case 'pianta':camera.position.set(0,15,0);   orb.target.set(0,0,0);      break;
     case 'front': camera.position.set(0,3,-14);  orb.target.set(0,1.3,0);    break; // fronte vetrato
     case 'rear':  camera.position.set(0,3,14);   orb.target.set(0,1.3,0);    break; // retro + u.est. HVAC
-    case 'scala': camera.position.set(11,5,-4);  orb.target.set(-5,1.5,0);   break; // scala SX, esce verso -X
+    case 'scala': camera.position.set(-11,5,-4); orb.target.set(5,1.5,0);    break; // scala DX, esce verso +X
     case 'bagno': camera.position.set(-4.5,2.5,0);orb.target.set(-2.2,1.2,0);break;
     case 'qe':    camera.position.set(3.5,2,-4); orb.target.set(1.8,1.5,-1); break;
     case 'pipe':  camera.position.set(0,0.5,-7); orb.target.set(0,0,0);      break;
     case 'int_f': camera.position.set(0,1.70,0.70);   orb.target.set(-1.0,1.30,-1.20); break; // dentro → fronte finestre
     case 'int_q': camera.position.set(-0.5,1.70,0);   orb.target.set(3.0,1.30,0);     break; // dentro → parete DX QP+HVAC
-    case 'int_lav':camera.position.set(+1.0,1.60,+0.2);orb.target.set(-2.8,1.0,+1.0); break; // dentro → lavabo angolo SX (X=-2.67, fondo)
+    case 'int_lav':camera.position.set(-1.0,1.60,+0.2);orb.target.set(+2.8,1.0,+1.0); break; // dentro → lavabo angolo SX visivo (X=+2.67, fondo)
     case 'int_tv': camera.position.set(0,1.60,-0.5);   orb.target.set(0,1.5,1.25);    break; // dentro → Samsung parete post.
   }
   camera.lookAt(orb.target); orb.update();
