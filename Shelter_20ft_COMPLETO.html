@@ -1376,10 +1376,11 @@ let xray=false;
 window.toggleXray=function(){
   xray=!xray;
   document.getElementById('btn-xray').classList.toggle('active',xray);
-  [mWall,mPart,mRoof].forEach(m=>{
-    m.transparent=true;
-    m.opacity=xray?0.08:0.92;
+  [mWall,mDoor,mRoof,mFloor].forEach(m=>{
+    m.transparent=xray;
+    m.opacity=xray?0.10:1.0;
     m.depthWrite=!xray;
+    m.needsUpdate=true;
   });
 };
 
@@ -1713,14 +1714,10 @@ reg(bbq,'bbq','Area BBQ + panca copertura',
       'H:130mm·Base 55×55mm·Acciaio zincato\nRegolazione ±30mm')
       .position.set(px,(RFL-0.020)/2,pz);
   }));
-reg(grp(at(mk(bx(4.58,0.022,SW-0.02),mPavFl),0,0,0)),
-  'pavimento','Pannello pav. galleggiante (zona servizi)',
-  'L:4580·W:2480mm·Sp:22mm\nMultistrato fenolico antiscivolo\nPortata 5kN/m²')
-  .position.set(0.70,RFL-0.011,0);
-reg(grp(at(mk(bx(1.58,0.022,1.10),mPavFl),0,0,0)),
-  'pavimento','Pannello pav. galleggiante (bagno)',
-  'L:1580·W:1100mm·Sp:22mm\nMultistrato fenolico')
-  .position.set(-2.20,RFL-0.011,-0.65);
+reg(grp(at(mk(bx(SL-WT*2,0.022,SW-WT*2),mPavFl),0,0,0)),
+  'pavimento','Pavimento galleggiante (completo)',
+  `L:${((SL-WT*2)*1000).toFixed(0)}·W:${((SW-WT*2)*1000).toFixed(0)}mm·Sp:22mm\nMultistrato fenolico antiscivolo·Portata 5kN/m²`)
+  .position.set(0,RFL-0.011,0);
 
 /* ──────────────────────────────────────────────
    IMPIANTO IDRICO
@@ -1803,7 +1800,7 @@ mcbColors.forEach((col,i)=>{
 // LED verde stato
 QE.add(at(mk(sp(0.012),new THREE.MeshPhongMaterial({color:0x00FF44,emissive:0x003300,emissiveIntensity:0.9})),-0.28,0.42,0.072));
 // Parete laterale destra, faccia interna — sempre visibile appena si entra
-QE.rotation.y=Math.PI/2;  // faccia verso -X (verso interno)
+QE.rotation.y=-Math.PI/2;  // faccia verso -X (verso interno)
 QE.position.set(SL/2-WT-0.075, RFL+1.10, -0.80);
 QE.userData.name='Quadro elettrico Bticino Pragma (QP)';
 QE.userData.dims=
