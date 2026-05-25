@@ -2188,7 +2188,7 @@ presas.forEach(([sx,sz,nm])=>{
 window.sv=function(v){
   document.querySelectorAll('#controls button').forEach(b=>b.classList.remove('active'));
   switch(v){
-    case 'iso':   camera.position.set(-9,7,-11); orb.target.set(0,1.3,0);    break; // SX=SX, DX=DX
+    case 'iso':   camera.position.set(9,7,11);   orb.target.set(0,1.3,0);    break; // SX=sinistra schermo, DX=destra schermo
     case 'pianta':camera.position.set(0,15,0);   orb.target.set(0,0,0);      break;
     case 'front': camera.position.set(0,3,-14);  orb.target.set(0,1.3,0);    break; // fronte vetrato
     case 'rear':  camera.position.set(0,3,14);   orb.target.set(0,1.3,0);    break; // retro + u.est. HVAC
