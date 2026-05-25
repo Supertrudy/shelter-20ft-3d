@@ -1827,16 +1827,11 @@ cd(1.80,0,-SW/2+0.25,1.80,RFL+0.28,-SW/2+0.25,0.042,mCond,
 // Canale portacavi principale
 cd(-SL/2+0.3,YDUCT,-SW/2+0.28,SL/2-0.3,YDUCT,-SW/2+0.28,0.045,mCond,
   'Canale portacavi principale (sotto pavimento)','50×50mm PVC grigio\nCavi luce+prese+forza');
-// Dorsale luce bagno
-cd(BX2+0.08,YDUCT,-SW/2+0.28,BX2+0.08,SH-0.28,-SW/2+0.28,0.028,mLuce,
-  'Dorsale verticale luce bagno','Tubo corrugato Ø20mm\nFG16OR16 3×1.5mm²·C1-Luce bagno');
-cd(BX2+0.08,SH-0.28,-SW/2+0.28,WC_X,SH-0.28,0,0.024,mLuce,
-  'Circuito luce bagno (soffitto)','Tubo corrugato Ø16mm\n3×1.5mm²·Circuito C1');
-// Plafoniera bagno
+// Plafoniera zona lavabo (sopra angolo SX visivo)
 const plaf=grp(at(mk(bx(0.32,0.052,0.22),mLamp),0,0,0),
                at(mk(bx(0.34,0.025,0.24),new THREE.MeshPhongMaterial({color:0xBBBBBB})),0,-0.038,0));
-plaf.position.set(WC_X,SH-0.028,0);
-plaf.userData.name='Plafoniera LED IP65 bagno';
+plaf.position.set(LAV_X,SH-0.028,LAV_Z-0.20);
+plaf.userData.name='Plafoniera LED IP65';
 plaf.userData.dims='18W·IP65·1800lm·4000K·320×220mm·IK08·Cl.I';
 EL.add(plaf); pickable.push(plaf);
 // Lampada specchio
@@ -1846,10 +1841,12 @@ lsp.position.set(LAV_X,RFL+1.68,LAV_Z-0.038);
 lsp.userData.name='Lampada specchio LED IP44';
 lsp.userData.dims='12W·IP44·1200lm·500×58×72mm\nCCT 2700-4000K regolabile';
 EL.add(lsp); pickable.push(lsp);
-cd(LAV_X,SH-0.10,LAV_Z, LAV_X,RFL+1.72,LAV_Z, 0.018,mLuce,'Cavo lampada specchio','Tubo corrugato Ø16mm·3×1.5mm²');
-// Circuito luce principale
-cd(1.80,RFL+1.80,-SW/2+0.22,-1.0,RFL+1.80,-SW/2+0.22,0.028,mLuce,
-  'Circuito luce locale principale','Tubo corrugato Ø20mm H=2300mm\nFG16OR16 3×1.5mm²·C2-Luce');
+// Cavidotto luce: verticale lungo parete DX dal QP al soffitto
+cd(SL/2-WT-0.15,RFL+2.00,-SW/2+0.25, SL/2-WT-0.15,SH-0.06,-SW/2+0.25, 0.025,mLuce,'Dorsale luce — parete DX','Tubo corrugato Ø20mm\nFG16OR16 3×1.5mm²');
+// Cavidotto luce: orizzontale a soffitto lungo parete frontale
+cd(SL/2-0.15,SH-0.06,-SW/2+0.25, -SL/2+0.15,SH-0.06,-SW/2+0.25, 0.025,mLuce,'Anello luce soffitto — parete frontale','Tubo corrugato Ø20mm·a soffitto');
+// Cavidotto luce: discesa al lavabo lungo parete DX
+cd(LAV_X+0.06,SH-0.06,SW/2-WT-0.06, LAV_X+0.06,RFL+1.72,SW/2-WT-0.06, 0.020,mLuce,'Discesa luce lavabo — parete DX','Tubo corrugato Ø16mm·3×1.5mm²');
 // Prese 16A
 [[-0.5,-SW/2+WT+0.03],[0.5,-SW/2+WT+0.03],[1.5,SW/2-WT-0.03],[-1.5,SW/2-WT-0.03]].forEach(([sx,sz],i)=>{
   const sk=at(mk(bx(0.086,0.086,0.044),new THREE.MeshPhongMaterial({color:0xEEEEDD})),sx,RFL+0.30,sz);
